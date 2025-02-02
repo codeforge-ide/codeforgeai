@@ -1,0 +1,12 @@
+{
+    "useful": [
+        "file1.py",
+        "file2.js"
+    ],
+    "useless": [
+        ".gitignore"
+    ],
+    "control": [
+        ".git"
+    ]
+}
