@@ -21,7 +21,9 @@ References:
 """
 
 import argparse
+import json
 import logging
+import os
 import sys
 
 from codeforgeai import __version__
@@ -56,6 +58,62 @@ def fib(n):
     return a
 
 
+# ---- New Functions for CodeforgeAI ----
+def create_default_config(config_path):
+    default_config = {
+        "general_model": "ollama_general",
+        "general_prompt": "based on the below prompt and without returning anything else, restructure it so that it is strictly understandable to a coding ai agent with json output for file changes:",
+        "code_model": "ollama_code",
+        "code_prompt": "in very clear, concise manner, solve the below request:"
+    }
+    with open(config_path, "w") as f:
+        json.dump(default_config, f, indent=4)
+    return default_config
+
+def load_config(config_path):
+    if not os.path.exists(config_path):
+        return create_default_config(config_path)
+    with open(config_path) as f:
+        return json.load(f)
+
+def analyze_working_directory():
+    # Dummy analysis of current directory
+    analysis = {
+        "useful": ["file1.py", "file2.js"],
+        "useless": [".gitignore"],
+        "control": [".git"]
+    }
+    with open(".codeforge.json", "w") as f:
+        json.dump(analysis, f, indent=4)
+    print("Analysis saved to .codeforge.json")
+
+def call_general_ai(prompt, config):
+    print("Calling general AI model with prompt:")
+    print(prompt)
+    # Placeholder: integrate with ollama CLI and python ollama library
+
+def call_code_ai(prompt):
+    print("Calling code AI model with prompt:")
+    print(prompt)
+    # Placeholder: integrate with ollama CLI and python ollama library
+
+def execute_changes(changes):
+    print("Executing changes:")
+    print(changes)
+    # Placeholder: process JSON output and update files accordingly
+
+def process_prompt(user_prompt):
+    config_path = os.path.join(os.path.expanduser("~"), "codeforgeai.json")
+    config = load_config(config_path)
+    combined_prompt = " ".join(user_prompt)
+    call_general_ai(combined_prompt, config)
+    # For demonstration, using dummy responses
+    general_response = "{}"
+    call_code_ai(general_response)
+    code_response = "{}"
+    execute_changes(code_response)
+
+
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
 # API allowing them to be called directly from the terminal as a CLI
@@ -72,28 +130,25 @@ def parse_args(args):
     Returns:
       :obj:`argparse.Namespace`: command line parameters namespace
     """
-    parser = argparse.ArgumentParser(description="Just a Fibonacci demonstration")
+    parser = argparse.ArgumentParser(description="CodeforgeAI AI agent")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    
+    # Subcommand: analyze working directory
+    subparsers.add_parser("analyze", help="Analyze current working directory")
+
+    # Subcommand: process a user prompt
+    prompt_parser = subparsers.add_parser("prompt", help="Process a user prompt")
+    prompt_parser.add_argument("user_prompt", nargs="+", help="User input prompt")
+
     parser.add_argument(
-        "--version",
-        action="version",
-        version=f"codeforgeai {__version__}",
+        "-v", "--verbose",
+        dest="loglevel", help="set loglevel to INFO",
+        action="store_const", const=logging.INFO
     )
-    parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
     parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="loglevel",
-        help="set loglevel to INFO",
-        action="store_const",
-        const=logging.INFO,
-    )
-    parser.add_argument(
-        "-vv",
-        "--very-verbose",
-        dest="loglevel",
-        help="set loglevel to DEBUG",
-        action="store_const",
-        const=logging.DEBUG,
+        "-vv", "--very-verbose",
+        dest="loglevel", help="set loglevel to DEBUG",
+        action="store_const", const=logging.DEBUG
     )
     return parser.parse_args(args)
 
@@ -121,10 +176,20 @@ def main(args):
           (for example  ``["--verbose", "42"]``).
     """
     args = parse_args(args)
-    setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print(f"The {args.n}-th Fibonacci number is {fib(args.n)}")
-    _logger.info("Script ends here")
+    loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
+    setup_logging(loglevel)
+    _logger.debug("Starting CodeforgeAI...")
+
+    # Ensure config exists in home directory
+    config_path = os.path.join(os.path.expanduser("~"), "codeforgeai.json")
+    load_config(config_path)
+
+    if args.command == "analyze":
+        analyze_working_directory()
+    elif args.command == "prompt":
+        process_prompt(args.user_prompt)
+    else:
+        print("No valid command provided. Use 'analyze' or 'prompt'.")
 
 
 def run():
