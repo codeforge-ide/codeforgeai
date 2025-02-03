@@ -50,7 +50,13 @@ def analyze_directory():
         classification_json = current_classification
     else:
         try:
-            classification_json = json.loads(classification_result)
+            # Remove markdown code block markers if present.
+            result = classification_result.strip()
+            if result.startswith("```json"):
+                result = result[len("```json"):].strip()
+                if result.endswith("```"):
+                    result = result[:-3].strip()
+            classification_json = json.loads(result)
         except Exception as e:
             logging.error("Error parsing classification result: %s", e)
             classification_json = current_classification

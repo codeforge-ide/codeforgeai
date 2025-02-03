@@ -1,15 +1,1 @@
-{
-    "useful": [
-        "codeforgeai/cli.py",
-        "codeforgeai/config.py",
-        "codeforgeai/models/code_model.py",
-        "codeforgeai/models/general_model.py",
-        "codeforgeai/parser.py",
-        "codeforgeai/file_manager.py"
-    ],
-    "useless": [],
-    "control": [
-        ".gitignore",
-        "tox.ini"
-    ]
-}
+{}
