@@ -12,6 +12,9 @@ def parse_cli(args):
     prompt_parser = subparsers.add_parser("prompt", help="Process a user prompt")
     prompt_parser.add_argument("user_prompt", nargs="+", help="User input prompt")
     
+    # New subcommand: config checkup
+    subparsers.add_parser("config", help="Run configuration checkup")
+    
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",

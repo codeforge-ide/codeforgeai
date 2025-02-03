@@ -3,7 +3,8 @@ import logging
 import os
 from codeforgeai.engine import Engine
 from codeforgeai.parser import parse_cli
-from codeforgeai.config import ensure_config_prompts
+from codeforgeai.config import ensure_config_prompts, load_config
+import json
 
 def setup_logging(loglevel):
     import sys
@@ -13,7 +14,6 @@ def setup_logging(loglevel):
 def main():
     # Ensure config prompts and other necessary keys are present irrespective of command
     config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
-    ensure_config_prompts(config_path)
     
     args = parse_cli(sys.argv[1:])
     if args.debug:
@@ -22,13 +22,20 @@ def main():
         loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
     setup_logging(loglevel)
     
+    # Process new config command independently.
+    if args.command == "config":
+        config = ensure_config_prompts(config_path)
+        print("Configuration checkup complete. Current configuration:")
+        print(json.dumps(config, indent=4))
+        return
+    
     engine = Engine()
     if args.command == "analyze":
         engine.run_analysis()
     elif args.command == "prompt":
         engine.process_prompt(args.user_prompt)
     else:
-        print("No valid command provided. Use 'analyze' or 'prompt'.")
+        print("No valid command provided. Use 'analyze', 'prompt', or 'config'.")
 
 if __name__ == "__main__":
     main()
