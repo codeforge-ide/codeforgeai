@@ -10,7 +10,11 @@ def setup_logging(loglevel):
 
 def main():
     args = parse_cli(sys.argv[1:])
-    loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
+    # Use --debug flag to override loglevel if set
+    if args.debug:
+        loglevel = logging.DEBUG
+    else:
+        loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
     setup_logging(loglevel)
     
     engine = Engine()

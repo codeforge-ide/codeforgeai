@@ -22,4 +22,9 @@ def parse_cli(args):
         dest="loglevel", help="set loglevel to DEBUG",
         action="store_const", const=logging.DEBUG
     )
+    # New debug flag that overrides loglevel
+    parser.add_argument(
+        "--debug", action="store_true", default=False,
+        help="Enable debug mode (overrides other verbosity flags)"
+    )
     return parser.parse_args(args)
