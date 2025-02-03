@@ -10,9 +10,11 @@ from codeforgeai.config import load_config
 def analyze_directory():
     json_path = ".codeforge.json"
     
-    # Run the tree command to get the directory structure in JSON format.
     try:
-        tree_output = subprocess.check_output(["tree", "-J"], text=True)
+        # Run tree in current working directory
+        tree_output = subprocess.check_output(
+            ["tree", "-J"], text=True, cwd=os.getcwd()
+        )
         logging.debug("Directory Analyzer: Tree output: %s", tree_output)
     except Exception as e:
         logging.error("Error running tree command: %s", e)
@@ -106,7 +108,12 @@ def analyze_directory():
     current_classification["author_email"] = author_email if author_email else "Unknown"
 
     # 7. Parse .gitignore to exclude those files from the tree output, then classify remaining files
-    ignored_paths = parse_gitignore()
+    ignored_paths = parse_gitignore()  # robust patterns
+    # Convert JSON tree to data
+    try:
+        tree_data = json.loads(tree_output)
+    except:
+        tree_data = []
     adjusted_tree_data = remove_ignored(tree_data, ignored_paths)
     specific_file_classification_prompt = config.get(
         "specific_file_classification",
@@ -165,17 +172,20 @@ def locate_readme():
 
 def parse_gitignore():
     """
-    Reads .gitignore from the working directory (if present) and returns a list
-    of patterns to ignore.
+    Reads .gitignore in the current working directory. 
+    Returns a list of patterns that can be directories or files.
     """
     patterns = []
-    if os.path.exists(".gitignore"):
+    gitignore_path = os.path.join(os.getcwd(), ".gitignore")
+    if os.path.exists(gitignore_path):
         try:
-            with open(".gitignore", encoding="utf-8", errors="ignore") as g:
+            with open(gitignore_path, encoding="utf-8", errors="ignore") as g:
                 for line in g:
                     line = line.strip()
-                    if line and not line.startswith("#"):
-                        patterns.append(line)
+                    # Ignore comments or empty lines
+                    if not line or line.startswith("#"):
+                        continue
+                    patterns.append(line)
         except Exception as e:
             logging.error("Error reading .gitignore: %s", e)
     return patterns
@@ -183,29 +193,48 @@ def parse_gitignore():
 
 def remove_ignored(tree_json, ignored_patterns):
     """
-    Remove items from the tree data that match any pattern in ignored_patterns.
-    Very simple check: if file name or directory name in patterns, remove it.
+    Remove items from tree data matching .gitignore patterns.
+    - If pattern is a directory name or ends with '/', ignore that directory recursively.
+    - If pattern is a file name or wildcard, ignore matching file(s).
     """
     if isinstance(tree_json, list):
-        filtered = []
+        result = []
         for item in tree_json:
-            fi = remove_ignored(item, ignored_patterns)
-            if fi is not None:
-                filtered.append(fi)
-        return filtered
+            filtered = remove_ignored(item, ignored_patterns)
+            if filtered is not None:
+                result.append(filtered)
+        return result
     elif isinstance(tree_json, dict):
         name = tree_json.get("name", "")
-        # Check if this file/dir is ignored directly
-        if any(name == pat for pat in ignored_patterns):
+        typ = tree_json.get("type", "")
+        # Check if item is ignored based on patterns
+        if is_ignored(name, typ, ignored_patterns):
             return None
-        if tree_json.get("type") == "directory":
+        if typ == "directory":
             contents = tree_json.get("contents", [])
             new_contents = remove_ignored(contents, ignored_patterns)
             tree_json["contents"] = new_contents
-            return tree_json
-        else:
-            return tree_json
+        return tree_json
     return tree_json
+
+
+def is_ignored(name, node_type, patterns):
+    """
+    Helper to decide if a file/directory matches any pattern in the .gitignore list.
+    """
+    for pat in patterns:
+        if pat.endswith("/"):
+            # Directory pattern
+            if node_type == "directory" and name == pat.rstrip("/"):
+                return True
+        else:
+            # File pattern or direct name
+            # Very basic matching:
+            if name == pat:
+                return True
+            if pat.startswith("*") and name.endswith(pat.lstrip("*")):
+                return True
+    return False
 
 
 def classify_files(tree_data, code_model, prompt):
