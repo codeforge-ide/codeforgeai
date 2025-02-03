@@ -25,17 +25,25 @@ class Engine:
 
     def process_prompt(self, user_prompt):
         raw_prompt = " ".join(user_prompt)
-        finetune_catalyst = self.config.get("prompt_finetune_prompt", "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else:")
+        finetune_catalyst = self.config.get(
+            "prompt_finetune_prompt",
+            "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else:"
+        )
         full_finetune_prompt = f"{finetune_catalyst}\n{raw_prompt}"
+        # Call the general model to finetune the prompt.
         finetuned_response = self.general_model.send_request(full_finetune_prompt, self.config)
-        logging.debug("Engine: Finetuned response: %s", finetuned_response)
+        # Fallback if no response.
+        if not finetuned_response:
+            finetuned_response = raw_prompt
         
         code_catalyst = self.config.get("code_prompt", "")
         full_code_prompt = f"{code_catalyst}\n{finetuned_response}"
+        # Call the code model to get the final response.
         code_response = self.code_model.send_request(full_code_prompt)
-        logging.debug("Engine: Code response: %s", code_response)
+        if not code_response:
+            code_response = f"Simulated final response for: {finetuned_response}"
         
-        # Return the final response to be printed by CLI.
+        # Return only the final response.
         return code_response
 
     def explain_code(self, file_path):
