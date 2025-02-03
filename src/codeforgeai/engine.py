@@ -18,7 +18,13 @@ class Engine:
         analyze_directory()
 
     def process_prompt(self, user_prompt):
-        prompt_text = " ".join(user_prompt)
-        general_response = self.general_model.send_request(prompt_text, self.config)
-        code_response = self.code_model.send_request(general_response)
+        raw_prompt = " ".join(user_prompt)
+        # Use catalytic prompt for the general model from config
+        general_catalyst = self.config.get("general_prompt", "")
+        full_general_prompt = f"{general_catalyst}\n{raw_prompt}"
+        general_response = self.general_model.send_request(full_general_prompt, self.config)
+        # Use catalytic prompt for the code model from config
+        code_catalyst = self.config.get("code_prompt", "")
+        full_code_prompt = f"{code_catalyst}\n{general_response}"
+        code_response = self.code_model.send_request(full_code_prompt)
         apply_changes(code_response)
