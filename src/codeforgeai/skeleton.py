@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import sys
+from codeforgeai.config import load_config   # <-- Added import
 
 from codeforgeai import __version__
 from codeforgeai.engine import Engine
