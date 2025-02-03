@@ -1,7 +1,9 @@
 import sys
 import logging
+import os
 from codeforgeai.engine import Engine
 from codeforgeai.parser import parse_cli
+from codeforgeai.config import ensure_config_prompts
 
 def setup_logging(loglevel):
     import sys
@@ -9,8 +11,11 @@ def setup_logging(loglevel):
     logging.basicConfig(level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
 
 def main():
+    # Ensure config prompts and other necessary keys are present irrespective of command
+    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
+    ensure_config_prompts(config_path)
+    
     args = parse_cli(sys.argv[1:])
-    # Use --debug flag to override loglevel if set
     if args.debug:
         loglevel = logging.DEBUG
     else:
