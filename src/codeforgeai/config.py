@@ -15,7 +15,24 @@ def create_default_config(config_path):
     return default_config
 
 def load_config(config_path):
+    default_config = {
+        "general_model": "ollama_general",
+        "general_prompt": "based on the below prompt and without returning anything else, restructure it so that it is strictly understandable to a coding ai agent with json output for file changes:",
+        "code_model": "ollama_code",
+        "code_prompt": "in very clear, concise manner, solve the below request:",
+        "directory_classification_prompt": "take this tree structure and help to better classify the files into actual useful user code files, useless template files and ignorable files, and source control files. return the classification in a json format like specified and return nothing else",
+        "debug": False
+    }
     if not os.path.exists(config_path):
         return create_default_config(config_path)
     with open(config_path) as f:
-        return json.load(f)
+        config = json.load(f)
+    updated = False
+    for key, value in default_config.items():
+        if key not in config:
+            config[key] = value
+            updated = True
+    if updated:
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
+    return config
