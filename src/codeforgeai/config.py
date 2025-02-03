@@ -3,12 +3,16 @@ import json
 
 def create_default_config(config_path):
     default_config = {
-        "general_model": "ollama_general",
+        "general_model": "tinyllama",
         "general_prompt": "based on the below prompt and without returning anything else, restructure it so that it is strictly understandable to a coding ai agent with json output for file changes:",
-        "code_model": "ollama_code",
+        "code_model": "qwen2.5-coder:0.5b",
         "code_prompt": "in very clear, concise manner, solve the below request:",
-        "directory_classification_prompt": "take this tree structure and help to better classify the files into actual useful user code files, useless template files and ignorable files, and source control files. return the classification in a json format like specified and return nothing else",
-        "debug": False  # default debug flag
+        "directory_classification_prompt": "Given the complete tree structure below as valid JSON, recursively process every single file and directory (based on its relative path) that is present. For each node, assign exactly one classification: 'useful' for files and directories that developers interact with, 'useless' for build, template, or temporary files and directories, and 'source' for source control or related files. For every node, return an object with the keys: 'type' (either 'file' or 'directory'), 'name', 'contents' (an array of child entries for directories, or file details for files), and a new key 'classification' that holds one of 'useful', 'useless', or 'source'. Ensure every file and directory from the input is included exactly once with one classification. Return only valid JSON with this structure and nothing else.",
+        "debug": False,
+        "prompt_finetune_prompt": "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else",
+        "language_classification_prompt": "in one word only, what programming language is used in this project tree structure",
+        "readme_summary_prompt": "in one short sentence only, generate a concise summary of this text below, and nothing else",
+        "specific_file_classification": "taking the path and content of this file and classify it into either only user code file or project code file or source control file"
     }
     # Expand the user directory
     config_path = os.path.expanduser(config_path)
