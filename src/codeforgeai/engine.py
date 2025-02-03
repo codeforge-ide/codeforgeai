@@ -34,7 +34,9 @@ class Engine:
         full_code_prompt = f"{code_catalyst}\n{finetuned_response}"
         code_response = self.code_model.send_request(full_code_prompt)
         logging.debug("Engine: Code response: %s", code_response)
-        apply_changes(code_response)
+        
+        # Return the final response to be printed by CLI.
+        return code_response
 
     def explain_code(self, file_path):
         explain_prompt = self.config.get("explain_code_prompt", "explain the following code in a clear and concise manner")
