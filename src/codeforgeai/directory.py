@@ -114,7 +114,7 @@ def analyze_directory():
         tree_data = json.loads(tree_output)
     except:
         tree_data = []
-    adjusted_tree_data = remove_ignored(tree_data, ignored_paths)
+    adjusted_tree_data = remove_ignored(tree_data, ignored_paths, parent=".")
     specific_file_classification_prompt = config.get(
         "specific_file_classification",
         "taking the path and content of this file and classify it into either only user code file or project code file or source control file"
@@ -191,48 +191,54 @@ def parse_gitignore():
     return patterns
 
 
-def remove_ignored(tree_json, ignored_patterns):
+def remove_ignored(tree_json, ignored_patterns, parent="."):
     """
     Remove items from tree data matching .gitignore patterns.
     - If pattern is a directory name or ends with '/', ignore that directory recursively.
     - If pattern is a file name or wildcard, ignore matching file(s).
     """
     if isinstance(tree_json, list):
-        result = []
+        filtered = []
         for item in tree_json:
-            filtered = remove_ignored(item, ignored_patterns)
-            if filtered is not None:
-                result.append(filtered)
-        return result
+            r = remove_ignored(item, ignored_patterns, parent)
+            if r is not None:
+                filtered.append(r)
+        return filtered
     elif isinstance(tree_json, dict):
         name = tree_json.get("name", "")
         typ = tree_json.get("type", "")
-        # Check if item is ignored based on patterns
-        if is_ignored(name, typ, ignored_patterns):
+        full_path = os.path.join(parent, name)
+        if is_ignored(full_path, typ, ignored_patterns):
             return None
         if typ == "directory":
             contents = tree_json.get("contents", [])
-            new_contents = remove_ignored(contents, ignored_patterns)
-            tree_json["contents"] = new_contents
+            tree_json["contents"] = remove_ignored(contents, ignored_patterns, full_path)
         return tree_json
     return tree_json
 
 
-def is_ignored(name, node_type, patterns):
+def is_ignored(full_path, node_type, patterns):
     """
-    Helper to decide if a file/directory matches any pattern in the .gitignore list.
+    Check if full_path (relative to cwd) matches any pattern in .gitignore.
     """
+    base_name = os.path.basename(full_path)
     for pat in patterns:
+        # Directory pattern
         if pat.endswith("/"):
-            # Directory pattern
-            if node_type == "directory" and name == pat.rstrip("/"):
+            if node_type == "directory" and base_name == pat.rstrip("/"):
+                return True
+            # If pattern is a subfolder wildcard, e.g. "build/" in "build/something"
+            if pat.rstrip("/") in full_path and node_type == "directory":
                 return True
         else:
-            # File pattern or direct name
-            # Very basic matching:
-            if name == pat:
+            # Exact file match
+            if base_name == pat:
                 return True
-            if pat.startswith("*") and name.endswith(pat.lstrip("*")):
+            # Simple wildcard: "*something"
+            if pat.startswith("*") and full_path.endswith(pat.lstrip("*")):
+                return True
+            # Pattern anywhere in path
+            if pat in full_path:
                 return True
     return False
 
