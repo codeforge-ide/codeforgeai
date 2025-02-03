@@ -1,93 +1,31 @@
-[
-    {
-        "type": "directory",
-        "name": ".vscode",
-        "contents": [
-            {
-                "type": "file",
-                "name": "launch.json"
-            },
-            {
-                "type": "file",
-                "name": "settings.json"
-            }
-        ]
-    },
-    {
-        "type": "directory",
-        "name": "_build",
-        "contents": []
-    },
-    {
-        "type": "directory",
-        "name": "_cache",
-        "contents": [
-            {
-                "type": "file",
-                "name": "build/egg-info"
-            }
-        ]
-    },
-    {
-        "type": "directory",
-        "name": "__pycache__",
-        "contents": []
-    },
-    {
-        "type": "directory",
-        "name": "dist",
-        "contents": [
-            {
-                "type": "file",
-                "name": "codeforgeai-0.1.0.dist-info"
-            }
-        ]
-    },
-    {
-        "type": "directory",
-        "name": "docs",
-        "contents": [
-            {
-                "type": "directory",
-                "name": "_static"
-            }
-        ]
-    },
-    {
-        "type": "file",
-        "name": "LICENSE.rst",
-        "contents": [
-            "This is a license file."
-        ]
-    },
-    {
-        "type": "directory",
-        "name": "pyproject.toml",
-        "contents": [
-            {
-                "type": "file",
-                "name": "build/egg-info"
-            }
-        ]
-    },
-    {
-        "type": "directory",
-        "name": "README.rst",
-        "contents": [
-            "This is a README file."
-        ]
-    },
-    {
-        "type": "file",
-        "name": "requirements.txt",
-        "contents": [
-            "numpy",
-            "pandas"
-        ]
-    },
-    {
-        "type": "directory",
-        "name": "_static",
-        "contents": []
-    }
-]
+{
+    "type": "directory",
+    "name": "tests",
+    "contents": [
+        {
+            "type": "file",
+            "name": "conftest.py"
+        },
+        {
+            "type": "file",
+            "name": "__init__.py"
+        },
+        {
+            "type": "file",
+            "name": "test_cli.py"
+        },
+        {
+            "type": "file",
+            "name": "test_directory.py"
+        },
+        {
+            "type": "file",
+            "name": "test_engine.py"
+        },
+        {
+            "type": "file",
+            "name": "test_skeleton.py"
+        }
+    ],
+    "classification": "useful"
+}
