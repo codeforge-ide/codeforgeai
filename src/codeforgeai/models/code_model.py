@@ -1,4 +1,4 @@
-import ollama  # new import
+from ollama import chat, ChatResponse  # updated import
 
 class CodeModel:
     def __init__(self, model_name="ollama_code"):
@@ -7,5 +7,8 @@ class CodeModel:
     def send_request(self, prompt):
         print(f"Using {self.model_name} with prompt:")
         print(prompt)
-        response = ollama.generate(model=self.model_name, prompt=prompt)  # integrated call
-        return response
+        response: ChatResponse = chat(
+            model=self.model_name,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        return response.message.content
