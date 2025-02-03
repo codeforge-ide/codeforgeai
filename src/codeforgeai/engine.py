@@ -30,21 +30,16 @@ class Engine:
             "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else:"
         )
         full_finetune_prompt = f"{finetune_catalyst}\n{raw_prompt}"
-        # Call the general model to finetune the prompt.
         finetuned_response = self.general_model.send_request(full_finetune_prompt, self.config)
-        # Fallback if no response.
+        
         if not finetuned_response:
             finetuned_response = raw_prompt
+            
+        code_prompt = self.config.get("code_prompt", "")
+        full_code_prompt = f"{code_prompt}\n{finetuned_response}"
+        final_response = self.code_model.send_request(full_code_prompt)
         
-        code_catalyst = self.config.get("code_prompt", "")
-        full_code_prompt = f"{code_catalyst}\n{finetuned_response}"
-        # Call the code model to get the final response.
-        code_response = self.code_model.send_request(full_code_prompt)
-        if not code_response:
-            code_response = f"Simulated final response for: {finetuned_response}"
-        
-        # Return only the final response.
-        return code_response
+        return final_response
 
     def explain_code(self, file_path):
         explain_prompt = self.config.get("explain_code_prompt", "explain the following code in a clear and concise manner")

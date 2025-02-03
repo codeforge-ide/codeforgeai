@@ -1,14 +1,12 @@
-from ollama import chat, ChatResponse  # updated import
-import logging  # new import
+import logging
+from ollama import chat, ChatResponse
 
 class GeneralModel:
     def __init__(self, model_name="ollama_general"):
         self.model_name = model_name
 
-    def send_request(self, prompt, config):
+    def send_request(self, prompt, config=None):
         logging.debug("GeneralModel: Sending prompt: %s", prompt)
-        print(f"Using {self.model_name} with prompt:")
-        print(prompt)
         response: ChatResponse = chat(
             model=self.model_name,
             messages=[{'role': 'user', 'content': prompt}]
