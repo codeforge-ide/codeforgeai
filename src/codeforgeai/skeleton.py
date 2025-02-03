@@ -37,9 +37,13 @@ __license__ = "MIT"
 
 _logger = logging.getLogger(__name__)
 
-# Initialize models
-general_model = GeneralModel()
-code_model = CodeModel()
+# Load configuration
+config_path = "/home/nathfavour/Documents/coder/codeforgeai/codeforgeai.json"
+config = load_config(config_path)
+
+# Initialize models with configuration values
+general_model = GeneralModel(config.get("general_model"))
+code_model = CodeModel(config.get("code_model"))
 
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
@@ -96,9 +100,6 @@ def execute_changes(changes):
     # Placeholder: process JSON output and update files accordingly
 
 def process_prompt(user_prompt):
-    # Use project-level config file.
-    config_path = "/home/nathfavour/Documents/coder/codeforgeai/codeforgeai.json"
-    config = load_config(config_path)
     combined_prompt = " ".join(user_prompt)
     
     # Finetune the prompt using the general AI model.
@@ -112,8 +113,6 @@ def process_prompt(user_prompt):
     print(final_response)
 
 def explain_code(file_path):
-    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
-    config = load_config(config_path)
     explain_prompt = config.get("explain_code_prompt", "explain the following code in a clear and concise manner")
     
     with open(file_path, "r") as file:
@@ -197,8 +196,6 @@ def main(args):
     loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
     setup_logging(loglevel)
     _logger.debug("Starting CodeforgeAI...")
-
-    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
 
     if args.command == "config":
         from codeforgeai.config import ensure_config_prompts
