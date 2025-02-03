@@ -27,6 +27,7 @@ import os
 import sys
 
 from codeforgeai import __version__
+from codeforgeai.engine import Engine
 
 __author__ = "nathfavour"
 __copyright__ = "nathfavour"
@@ -75,17 +76,6 @@ def load_config(config_path):
         return create_default_config(config_path)
     with open(config_path) as f:
         return json.load(f)
-
-def analyze_working_directory():
-    # Dummy analysis of current directory
-    analysis = {
-        "useful": ["file1.py", "file2.js"],
-        "useless": [".gitignore"],
-        "control": [".git"]
-    }
-    with open(".codeforge.json", "w") as f:
-        json.dump(analysis, f, indent=4)
-    print("Analysis saved to .codeforge.json")
 
 def call_general_ai(prompt, config):
     print("Calling general AI model with prompt:")
@@ -181,12 +171,14 @@ def main(args):
     setup_logging(loglevel)
     _logger.debug("Starting CodeforgeAI...")
 
-    # Ensure config exists in home directory using the updated path
     config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
     load_config(config_path)
 
     if args.command == "analyze":
-        analyze_working_directory()
+        # Instead of calling the dummy function,
+        # call Engine().run_analysis() to leverage the code AI model
+        eng = Engine()
+        eng.run_analysis()
     elif args.command == "prompt":
         process_prompt(args.user_prompt)
     else:
