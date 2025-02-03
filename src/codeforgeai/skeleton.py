@@ -96,16 +96,18 @@ def execute_changes(changes):
     # Placeholder: process JSON output and update files accordingly
 
 def process_prompt(user_prompt):
-    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
+    # Use project-level config file.
+    config_path = "/home/nathfavour/Documents/coder/codeforgeai/codeforgeai.json"
     config = load_config(config_path)
     combined_prompt = " ".join(user_prompt)
     
-    # Finetune the prompt using the general AI model
-    finetune_prompt = config.get("prompt_finetune_prompt", "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else:")
+    # Finetune the prompt using the general AI model.
+    finetune_prompt = config.get("prompt_finetune_prompt",
+        "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else:")
     full_finetune_prompt = f"{finetune_prompt}\n\n{combined_prompt}"
     finetuned_response = call_general_ai(full_finetune_prompt, config)
     
-    # Use the finetuned response to prompt the code AI model
+    # Use the finetuned response to prompt the code AI model.
     final_response = call_code_ai(finetuned_response)
     print(final_response)
 

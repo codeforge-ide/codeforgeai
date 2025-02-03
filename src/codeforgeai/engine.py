@@ -9,12 +9,11 @@ from codeforgeai.file_manager import apply_changes
 
 class Engine:
     def __init__(self):
-        home = os.path.expanduser("~")
-        # Updated config path to use a leading dot
-        self.config_path = os.path.join(home, ".codeforgeai.json")
+        # Use project-level config file instead of user home.
+        self.config_path = "/home/nathfavour/Documents/coder/codeforgeai/codeforgeai.json"
         self.config = load_config(self.config_path)
-        self.general_model = GeneralModel(self.config.get("general_model", "ollama_general"))
-        self.code_model = CodeModel(self.config.get("code_model", "ollama_code"))
+        self.general_model = GeneralModel(self.config.get("general_model"))
+        self.code_model = CodeModel(self.config.get("code_model"))
 
     def run_analysis(self):
         analyze_directory()
