@@ -61,20 +61,14 @@ def get_relative_path(path):
         return path
 
 def analyze_directory():
+    """
+    Now reuse the stripped tree from strip_directory to continue classification.
+    """
     json_path = ".codeforge.json"
     ignored_patterns = parse_gitignore()
     
-    try:
-        # Run tree in current working directory
-        tree_output = subprocess.check_output(
-            ["tree", "-J", "--gitignore"], 
-            text=True, 
-            cwd=os.getcwd()
-        )
-        tree_data = json.loads(tree_output)
-    except Exception as e:
-        logging.error("Error running tree command: %s", e)
-        tree_data = []
+    # Reuse strip_directory output
+    stripped_data = strip_directory(return_data=True)
 
     # Early gitignore filtering
     def filter_tree(node, parent="."):
@@ -98,7 +92,7 @@ def analyze_directory():
             return node
         return node
 
-    filtered_tree = filter_tree(tree_data)
+    filtered_tree = stripped_data
 
     # Read existing classification from .codeforge.json if available.
     try:
@@ -108,7 +102,7 @@ def analyze_directory():
         current_classification = {}
     
     combined_message = (
-        f"Tree output:\n{tree_output}\n\n"
+        f"Tree output:\n{stripped_data}\n\n"
         f"Current classification:\n{json.dumps(current_classification, indent=2)}"
     )
     
@@ -123,7 +117,7 @@ def analyze_directory():
     )
     code_model_name = config.get("code_model", "ollama_code")
     code_model = CodeModel(code_model_name)
-    language_result = code_model.send_request(f"{language_classification_prompt}\n{tree_output}")
+    language_result = code_model.send_request(f"{language_classification_prompt}\n{stripped_data}")
     logging.debug("Directory Analyzer: Language result: %s", language_result)
     language_result_clean = language_result.strip().replace("```", "")
     current_classification["language"] = language_result_clean
@@ -190,7 +184,7 @@ def analyze_directory():
     ignored_paths = parse_gitignore()  # robust patterns
     # Convert JSON tree to data
     try:
-        tree_data = json.loads(tree_output)
+        tree_data = json.loads(stripped_data)
     except:
         tree_data = []
     adjusted_tree_data = remove_ignored(tree_data, ignored_paths, parent=".")
@@ -408,23 +402,21 @@ def loop_analyze_directory():
         print("Feedback loop iteration complete. Press Ctrl+C to exit.")
         time.sleep(5)
 
-def strip_directory():
+def strip_directory(return_data=False):
     """
-    Prints the tree structure after removing all files/directories matching .gitignore rules.
+    Prints (or returns) the tree structure after removing all gitignored files/directories.
     """
     try:
         tree_output = subprocess.check_output(
-            ["tree", "-J"],
-            text=True,
-            cwd=os.getcwd()
+            ["tree", "-J"], text=True, cwd=os.getcwd()
         )
         tree_data = json.loads(tree_output)
     except Exception as e:
         logging.error("Error running tree command: %s", e)
-        return
+        return [] if return_data else None
 
     ignored_patterns = parse_gitignore()
-    
+
     def filter_tree(node, parent="."):
         if isinstance(node, list):
             filtered = []
@@ -435,14 +427,16 @@ def strip_directory():
             return filtered
         elif isinstance(node, dict):
             path = os.path.join(parent, node.get("name", ""))
-            rel_path = get_relative_path(path)
+            rel_path = get_relative_path(path).lstrip("./")  # ensure purely relative
             if should_ignore(rel_path, ignored_patterns):
                 return None
+            node["name"] = rel_path
             if node.get("type") == "directory":
-                contents = node.get("contents", [])
-                node["contents"] = filter_tree(contents, path)
+                node["contents"] = filter_tree(node.get("contents", []), path)
             return node
         return node
 
     filtered_tree = filter_tree(tree_data)
+    if return_data:
+        return filtered_tree
     print(json.dumps(filtered_tree, indent=4))
