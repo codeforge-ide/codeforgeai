@@ -28,6 +28,8 @@ import sys
 
 from codeforgeai import __version__
 from codeforgeai.engine import Engine
+from codeforgeai.models.general_model import GeneralModel
+from codeforgeai.models.code_model import CodeModel
 
 __author__ = "nathfavour"
 __copyright__ = "nathfavour"
@@ -35,6 +37,9 @@ __license__ = "MIT"
 
 _logger = logging.getLogger(__name__)
 
+# Initialize models
+general_model = GeneralModel()
+code_model = CodeModel()
 
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
@@ -78,14 +83,12 @@ def load_config(config_path):
         return json.load(f)
 
 def call_general_ai(prompt, config):
-    print("Calling general AI model with prompt:")
-    print(prompt)
-    # Placeholder: integrate with ollama CLI and python ollama library
+    response = general_model.send_request(prompt, config)
+    return response
 
 def call_code_ai(prompt):
-    print("Calling code AI model with prompt:")
-    print(prompt)
-    # Placeholder: integrate with ollama CLI and python ollama library
+    response = code_model.send_request(prompt)
+    return response
 
 def execute_changes(changes):
     print("Executing changes:")
