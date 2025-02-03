@@ -26,8 +26,8 @@ def analyze_directory():
         f"Current classification:\n{json.dumps(current_classification, indent=2)}"
     )
     
-    # Load configuration from the home directory.
-    config_path = os.path.join(os.path.expanduser("~"), "codeforgeai.json")
+    # Load configuration from the home directory (config path: ~/.codeforgeai.json).
+    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
     config = load_config(config_path)
     
     # Get the directory classification prompt from config.
@@ -38,8 +38,9 @@ def analyze_directory():
     
     full_prompt = f"{directory_prompt}\n{combined_message}"
     
-    # Call code AI model using the ollama library.
-    code_model = CodeModel(config.get("code_model", "ollama_code"))
+    # Retrieve the code model name from config and call the model via ollama.
+    code_model_name = config.get("code_model", "ollama_code")
+    code_model = CodeModel(code_model_name)
     classification_result = code_model.send_request(full_prompt)
     
     try:
@@ -48,7 +49,7 @@ def analyze_directory():
         print("Error parsing classification result:", e)
         classification_json = current_classification
     
-    # Update .codeforge.json with the improved classification.
+    # Update .codeforge.json with the refined classification.
     with open(json_path, "w") as f:
         json.dump(classification_json, f, indent=4)
     
