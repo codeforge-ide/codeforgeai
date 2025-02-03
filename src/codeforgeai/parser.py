@@ -13,8 +13,11 @@ def parse_cli(args):
     prompt_parser = subparsers.add_parser("prompt", help="Process a user prompt")
     prompt_parser.add_argument("user_prompt", nargs="+", help="User input prompt")
     
-    # New subcommand: config checkup
+    # Subcommand: configuration checkup
     subparsers.add_parser("config", help="Run configuration checkup")
+    
+    # New subcommand: strip gitignored files from tree structure
+    subparsers.add_parser("strip", help="Print tree structure after removing gitignored files")
     
     parser.add_argument(
         "-v", "--verbose",
