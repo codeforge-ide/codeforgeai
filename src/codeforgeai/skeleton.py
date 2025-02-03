@@ -132,6 +132,9 @@ def parse_args(args):
 
     subparsers.add_parser("config", help="Run configuration checkup")
 
+    # Add strip subcommand
+    subparsers.add_parser("strip", help="Print tree structure after removing gitignored files")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -188,6 +191,10 @@ def main(args):
         eng.run_analysis()
     elif args.command == "prompt":
         process_prompt(args.user_prompt)
+    elif args.command == "strip":
+        from codeforgeai.directory import strip_directory
+        strip_directory()
+        return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', or 'config'.")
 
