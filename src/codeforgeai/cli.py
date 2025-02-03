@@ -60,7 +60,8 @@ def main():
         else:
             engine.run_analysis()
     elif args.command == "prompt":
-        engine.process_prompt(args.user_prompt)
+        response = engine.process_prompt(args.user_prompt)
+        print(response)
     elif args.command == "explain":
         explanation = engine.explain_code(args.file_path)
         print(explanation)

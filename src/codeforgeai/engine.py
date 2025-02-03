@@ -25,12 +25,13 @@ class Engine:
 
     def process_prompt(self, user_prompt):
         raw_prompt = " ".join(user_prompt)
-        general_catalyst = self.config.get("general_prompt", "")
-        full_general_prompt = f"{general_catalyst}\n{raw_prompt}"
-        general_response = self.general_model.send_request(full_general_prompt, self.config)
-        logging.debug("Engine: General response: %s", general_response)
+        finetune_catalyst = self.config.get("prompt_finetune_prompt", "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else:")
+        full_finetune_prompt = f"{finetune_catalyst}\n{raw_prompt}"
+        finetuned_response = self.general_model.send_request(full_finetune_prompt, self.config)
+        logging.debug("Engine: Finetuned response: %s", finetuned_response)
+        
         code_catalyst = self.config.get("code_prompt", "")
-        full_code_prompt = f"{code_catalyst}\n{general_response}"
+        full_code_prompt = f"{code_catalyst}\n{finetuned_response}"
         code_response = self.code_model.send_request(full_code_prompt)
         logging.debug("Engine: Code response: %s", code_response)
         apply_changes(code_response)
