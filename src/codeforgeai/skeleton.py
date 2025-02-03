@@ -131,6 +131,9 @@ def parse_args(args):
     prompt_parser = subparsers.add_parser("prompt", help="Process a user prompt")
     prompt_parser.add_argument("user_prompt", nargs="+", help="User input prompt")
 
+    # New subcommand: config checkup
+    subparsers.add_parser("config", help="Run configuration checkup")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -172,8 +175,14 @@ def main(args):
     _logger.debug("Starting CodeforgeAI...")
 
     config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
-    load_config(config_path)
 
+    if args.command == "config":
+        from codeforgeai.config import ensure_config_prompts
+        config = ensure_config_prompts(config_path)
+        print("Configuration checkup complete. Current configuration:")
+        print(json.dumps(config, indent=4))
+        return
+    
     if args.command == "analyze":
         # Instead of calling the dummy function,
         # call Engine().run_analysis() to leverage the code AI model
@@ -182,7 +191,7 @@ def main(args):
     elif args.command == "prompt":
         process_prompt(args.user_prompt)
     else:
-        print("No valid command provided. Use 'analyze' or 'prompt'.")
+        print("No valid command provided. Use 'analyze', 'prompt', or 'config'.")
 
 
 def run():
