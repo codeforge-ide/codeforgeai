@@ -3,23 +3,103 @@ import json
 import subprocess
 import logging
 import time
+import fnmatch
+from pathlib import Path
 from codeforgeai.models.code_model import CodeModel
 from codeforgeai.models.general_model import GeneralModel
 from codeforgeai.config import load_config
 
+def parse_gitignore():
+    """Robust .gitignore parsing that handles all pattern types."""
+    patterns = []
+    gitignore = os.path.join(os.getcwd(), '.gitignore')
+    if os.path.exists(gitignore):
+        with open(gitignore, encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    # Handle directory patterns
+                    if line.endswith('/'):
+                        patterns.append(line[:-1])  # Remove trailing slash
+                    # Handle file patterns
+                    else:
+                        patterns.append(line)
+    return patterns
+
+def should_ignore(path, patterns):
+    """
+    Check if a path matches any gitignore pattern.
+    Handles both files and directories properly.
+    """
+    path = os.path.normpath(path)
+    is_dir = os.path.isdir(path)
+
+    for pattern in patterns:
+        # Directory-specific matching
+        if pattern.endswith('/'):
+            if is_dir and (fnmatch.fnmatch(path, pattern[:-1]) or 
+                          any(fnmatch.fnmatch(part, pattern[:-1]) 
+                              for part in path.split(os.sep))):
+                return True
+        # File pattern matching
+        else:
+            if fnmatch.fnmatch(path, pattern) or \
+               any(fnmatch.fnmatch(part, pattern) 
+                   for part in path.split(os.sep)):
+                return True
+            # Handle *.ext patterns
+            if pattern.startswith('*'):
+                if path.endswith(pattern[1:]):
+                    return True
+    return False
+
+def get_relative_path(path):
+    """Convert any path to be relative to current working directory."""
+    try:
+        return os.path.relpath(path, os.getcwd())
+    except ValueError:
+        return path
+
 def analyze_directory():
     json_path = ".codeforge.json"
+    ignored_patterns = parse_gitignore()
     
     try:
         # Run tree in current working directory
         tree_output = subprocess.check_output(
-            ["tree", "-J"], text=True, cwd=os.getcwd()
+            ["tree", "-J", "--gitignore"], 
+            text=True, 
+            cwd=os.getcwd()
         )
-        logging.debug("Directory Analyzer: Tree output: %s", tree_output)
+        tree_data = json.loads(tree_output)
     except Exception as e:
         logging.error("Error running tree command: %s", e)
-        tree_output = "{}"
-    
+        tree_data = []
+
+    # Early gitignore filtering
+    def filter_tree(node, parent="."):
+        if isinstance(node, list):
+            return [n for n in node if n is not None]
+        
+        if isinstance(node, dict):
+            path = os.path.join(parent, node.get("name", ""))
+            rel_path = get_relative_path(path)
+            
+            if should_ignore(rel_path, ignored_patterns):
+                return None
+            
+            if node.get("type") == "directory":
+                filtered_contents = []
+                for child in node.get("contents", []):
+                    filtered = filter_tree(child, path)
+                    if filtered is not None:
+                        filtered_contents.append(filtered)
+                node["contents"] = filtered_contents
+            return node
+        return node
+
+    filtered_tree = filter_tree(tree_data)
+
     # Read existing classification from .codeforge.json if available.
     try:
         with open(json_path) as f:
@@ -52,8 +132,7 @@ def analyze_directory():
     src_path = None
     try:
         # Parse tree_output (JSON) to find a "name": "src"
-        tree_data = json.loads(tree_output)
-        src_path = find_src_path(tree_data)
+        src_path = find_src_path(filtered_tree)
         if src_path:
             current_classification["src_directory"] = src_path
         else:
@@ -170,27 +249,6 @@ def locate_readme():
     return None
 
 
-def parse_gitignore():
-    """
-    Reads .gitignore in the current working directory. 
-    Returns a list of patterns that can be directories or files.
-    """
-    patterns = []
-    gitignore_path = os.path.join(os.getcwd(), ".gitignore")
-    if os.path.exists(gitignore_path):
-        try:
-            with open(gitignore_path, encoding="utf-8", errors="ignore") as g:
-                for line in g:
-                    line = line.strip()
-                    # Ignore comments or empty lines
-                    if not line or line.startswith("#"):
-                        continue
-                    patterns.append(line)
-        except Exception as e:
-            logging.error("Error reading .gitignore: %s", e)
-    return patterns
-
-
 def remove_ignored(tree_json, ignored_patterns, parent="."):
     """
     Remove items from tree data matching .gitignore patterns.
@@ -244,43 +302,37 @@ def is_ignored(full_path, node_type, patterns):
 
 
 def classify_files(tree_data, code_model, prompt):
-    """
-    Recursively classify each file that remains in tree_data after ignoring. 
-    For each file, read its content, call code_model with 'prompt + file content + path', 
-    and store classification results in a dictionary like { path: classification }.
-    """
+    """Classify files with proper path handling."""
     file_class_map = {}
-    _classify_walk(tree_data, code_model, prompt, file_class_map, base_path=".")
+    ignored_patterns = parse_gitignore()
+
+    def walk(node, parent="."):
+        if isinstance(node, dict):
+            name = node.get("name", "")
+            path = os.path.join(parent, name)
+            rel_path = get_relative_path(path)
+            
+            if should_ignore(rel_path, ignored_patterns):
+                return
+
+            if node.get("type") == "file":
+                try:
+                    with open(rel_path, encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                    final_prompt = f"{prompt}\nFile path: {rel_path}\nContent:\n{content}"
+                    result = code_model.send_request(final_prompt)
+                    file_class_map[rel_path] = result.strip().replace("```", "")
+                except Exception as e:
+                    logging.error(f"Error processing file {rel_path}: {e}")
+            
+            elif node.get("type") == "directory":
+                for child in node.get("contents", []):
+                    walk(child, path)
+
+    for item in tree_data:
+        walk(item)
+    
     return file_class_map
-
-
-def _classify_walk(node, code_model, prompt, file_class_map, base_path):
-    if isinstance(node, dict):
-        if node.get("type") == "file":
-            fname = node["name"]
-            fullpath = os.path.join(base_path, fname)
-            # Attempt to read content
-            content = ""
-            try:
-                with open(fullpath, encoding="utf-8", errors="ignore") as f:
-                    content = f.read()
-            except:
-                pass
-            # Construct final prompt
-            final_prompt = f"{prompt}\nFile path: {fullpath}\nFile content:\n{content}"
-            logging.debug("File Classification Prompt: %s", final_prompt[:500])
-            result = code_model.send_request(final_prompt)
-            classification = result.strip().replace("```", "")
-            file_class_map[fullpath] = classification
-        elif node.get("type") == "directory":
-            dname = node["name"]
-            contents = node.get("contents", [])
-            new_base = os.path.join(base_path, dname)
-            for c in contents:
-                _classify_walk(c, code_model, prompt, file_class_map, new_base)
-    elif isinstance(node, list):
-        for item in node:
-            _classify_walk(item, code_model, prompt, file_class_map, base_path)
 
 
 def loop_analyze_directory():
@@ -355,3 +407,42 @@ def loop_analyze_directory():
 
         print("Feedback loop iteration complete. Press Ctrl+C to exit.")
         time.sleep(5)
+
+def strip_directory():
+    """
+    Prints the tree structure after removing all files/directories matching .gitignore rules.
+    """
+    try:
+        tree_output = subprocess.check_output(
+            ["tree", "-J"],
+            text=True,
+            cwd=os.getcwd()
+        )
+        tree_data = json.loads(tree_output)
+    except Exception as e:
+        logging.error("Error running tree command: %s", e)
+        return
+
+    ignored_patterns = parse_gitignore()
+    
+    def filter_tree(node, parent="."):
+        if isinstance(node, list):
+            filtered = []
+            for item in node:
+                f = filter_tree(item, parent)
+                if f is not None:
+                    filtered.append(f)
+            return filtered
+        elif isinstance(node, dict):
+            path = os.path.join(parent, node.get("name", ""))
+            rel_path = get_relative_path(path)
+            if should_ignore(rel_path, ignored_patterns):
+                return None
+            if node.get("type") == "directory":
+                contents = node.get("contents", [])
+                node["contents"] = filter_tree(contents, path)
+            return node
+        return node
+
+    filtered_tree = filter_tree(tree_data)
+    print(json.dumps(filtered_tree, indent=4))
