@@ -212,7 +212,8 @@ def main(args):
         strip_directory()
         return
     elif args.command == "explain":
-        explanation = explain_code(args.file_path)
+        eng = Engine()
+        explanation = eng.explain_code(args.file_path)
         print(explanation)
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
