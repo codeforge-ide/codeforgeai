@@ -103,7 +103,8 @@ def execute_changes(changes):
     # Placeholder: process JSON output and update files accordingly
 
 def process_prompt(user_prompt):
-    config_path = os.path.join(os.path.expanduser("~"), "codeforgeai.json")
+    # Update config path to use a leading dot
+    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
     config = load_config(config_path)
     combined_prompt = " ".join(user_prompt)
     call_general_ai(combined_prompt, config)
@@ -180,8 +181,8 @@ def main(args):
     setup_logging(loglevel)
     _logger.debug("Starting CodeforgeAI...")
 
-    # Ensure config exists in home directory
-    config_path = os.path.join(os.path.expanduser("~"), "codeforgeai.json")
+    # Ensure config exists in home directory using the updated path
+    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
     load_config(config_path)
 
     if args.command == "analyze":
