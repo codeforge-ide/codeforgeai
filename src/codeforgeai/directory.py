@@ -99,6 +99,60 @@ def strip_directory(return_data=False):
         return filtered_tree
     print(json.dumps(filtered_tree, indent=4))
 
+def collect_metadata(stripped_data, config):
+    """Collect all project metadata using stripped tree data."""
+    metadata = {}
+    
+    # Language detection
+    code_model = CodeModel(config.get("code_model", "ollama_code"))
+    language_prompt = config.get("language_classification_prompt")
+    language_result = code_model.send_request(
+        f"{language_prompt}\n{json.dumps(stripped_data)}"
+    ).strip()
+    metadata["language"] = language_result.replace("```", "")
+    
+    # Source directory detection - use clean paths
+    src_path = find_src_path(stripped_data)
+    metadata["src_directory"] = src_path.lstrip("./") if src_path else None
+    
+    # README summary
+    readme_path = locate_readme()
+    if readme_path:
+        try:
+            with open(readme_path, encoding="utf-8", errors="ignore") as rf:
+                readme_content = rf.read()
+            general_model = GeneralModel(config.get("general_model"))
+            summary_result = general_model.send_request(
+                f"{config.get('readme_summary_prompt')}\n{readme_content}", 
+                config
+            )
+            metadata["short_description"] = summary_result.strip().replace("```", "")
+        except Exception as e:
+            logging.error(f"Error processing README: {e}")
+    
+    # Git info
+    try:
+        remote = subprocess.check_output(["git", "remote", "-v"], text=True).strip()
+        metadata["repository"] = remote.split("\n")[0] if remote else "Unknown"
+    except Exception:
+        metadata["repository"] = "Unknown"
+        
+    try:
+        metadata["author"] = subprocess.check_output(
+            ["git", "config", "user.name"], text=True
+        ).strip() or "Unknown"
+    except Exception:
+        metadata["author"] = "Unknown"
+        
+    try:
+        metadata["author_email"] = subprocess.check_output(
+            ["git", "config", "user.email"], text=True
+        ).strip() or "Unknown"
+    except Exception:
+        metadata["author_email"] = "Unknown"
+    
+    return metadata
+
 def analyze_directory():
     """Analyze directory using stripped tree data."""
     json_path = ".codeforge.json"
@@ -108,37 +162,23 @@ def analyze_directory():
     # Get stripped tree data
     stripped_data = strip_directory(return_data=True)
     
-    # Initialize or load existing classification
+    # Load or initialize classification
     try:
         with open(json_path) as f:
             classification = json.load(f)
     except:
         classification = {}
     
-    def collect_files(node, files=None):
-        """Get all file paths from stripped tree."""
-        if files is None:
-            files = []
-        if isinstance(node, list):
-            for item in node:
-                collect_files(item, files)
-        elif isinstance(node, dict):
-            if node.get("type") == "file":
-                files.append(node["name"])
-            elif node.get("type") == "directory":
-                for child in node.get("contents", []):
-                    collect_files(child, files)
-        return files
-
-    # Get all files from stripped tree
-    all_files = collect_files(stripped_data)
+    # Collect metadata using stripped data
+    metadata = collect_metadata(stripped_data, config)
+    classification.update(metadata)
     
-    # Initialize file classifications if not present
+    # Classify files
     if "file_classification" not in classification:
         classification["file_classification"] = {}
     
-    # Classify each file individually
-    code_model = CodeModel(config.get("code_model", "ollama_code"))
+    all_files = collect_files(stripped_data)
+    code_model = CodeModel(config.get("code_model"))
     specific_prompt = config.get("specific_file_classification")
     
     for filepath in all_files:
@@ -149,19 +189,18 @@ def analyze_directory():
                 prompt = f"{specific_prompt}\nFile path: {filepath}\nContent:\n{content}"
                 result = code_model.send_request(prompt).strip()
                 classification["file_classification"][filepath] = result
-                # Save after each classification
+                # Save incrementally
                 with open(json_path, "w") as f:
                     json.dump(classification, f, indent=4)
             except Exception as e:
                 logging.error(f"Error classifying {filepath}: {e}")
     
-    # Update other metadata
-    classification["src_directory"] = "src" if os.path.exists("src") else None
-    classification["language"] = "Python"  # From tree analysis
-    # ...rest of metadata updates (author, etc)...
-    
+    # Final save
     with open(json_path, "w") as f:
         json.dump(classification, f, indent=4)
+    
+    logging.debug("Directory Analyzer: Updated classification saved to .codeforge.json")
+    print("Updated classification saved to .codeforge.json")
 
 def loop_analyze_directory():
     """Run analyze_directory periodically, checking for changes."""
