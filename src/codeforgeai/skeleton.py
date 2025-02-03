@@ -124,14 +124,12 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description="CodeforgeAI AI agent")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
-    # Subcommand: analyze working directory
-    subparsers.add_parser("analyze", help="Analyze current working directory")
+    analyze_parser = subparsers.add_parser("analyze", help="Analyze current working directory")
+    analyze_parser.add_argument("--loop", action="store_true", help="Enable adaptive feedback loop")
 
-    # Subcommand: process a user prompt
     prompt_parser = subparsers.add_parser("prompt", help="Process a user prompt")
     prompt_parser.add_argument("user_prompt", nargs="+", help="User input prompt")
 
-    # New subcommand: config checkup
     subparsers.add_parser("config", help="Run configuration checkup")
 
     parser.add_argument(
