@@ -34,3 +34,13 @@ class Engine:
         code_response = self.code_model.send_request(full_code_prompt)
         logging.debug("Engine: Code response: %s", code_response)
         apply_changes(code_response)
+
+    def explain_code(self, file_path):
+        explain_prompt = self.config.get("explain_code_prompt", "explain the following code in a clear and concise manner")
+        
+        with open(file_path, "r") as file:
+            file_content = file.read()
+        
+        prompt = f"{explain_prompt}\n\nFile: {file_path}\n\n{file_content}"
+        response = self.code_model.send_request(prompt)
+        return response

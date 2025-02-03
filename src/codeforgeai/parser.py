@@ -19,6 +19,10 @@ def parse_cli(args):
     # New subcommand: strip gitignored files from tree structure
     subparsers.add_parser("strip", help="Print tree structure after removing gitignored files")
     
+    # New subcommand: explain code
+    explain_parser = subparsers.add_parser("explain", help="Explain code in a file")
+    explain_parser.add_argument("file_path", help="Relative path to the file to be explained")
+    
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",

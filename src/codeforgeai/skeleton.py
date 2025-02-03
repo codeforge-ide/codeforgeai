@@ -104,6 +104,18 @@ def process_prompt(user_prompt):
     code_response = "{}"
     execute_changes(code_response)
 
+def explain_code(file_path):
+    config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
+    config = load_config(config_path)
+    explain_prompt = config.get("explain_code_prompt", "explain the following code in a clear and concise manner")
+    
+    with open(file_path, "r") as file:
+        file_content = file.read()
+    
+    prompt = f"{explain_prompt}\n\nFile: {file_path}\n\n{file_content}"
+    response = call_code_ai(prompt)
+    return response
+
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -134,6 +146,10 @@ def parse_args(args):
 
     # Add strip subcommand
     subparsers.add_parser("strip", help="Print tree structure after removing gitignored files")
+
+    # Add explain subcommand
+    explain_parser = subparsers.add_parser("explain", help="Explain the code in the given file")
+    explain_parser.add_argument("file_path", help="Path to the file to be explained")
 
     parser.add_argument(
         "-v", "--verbose",
@@ -195,8 +211,11 @@ def main(args):
         from codeforgeai.directory import strip_directory
         strip_directory()
         return
+    elif args.command == "explain":
+        explanation = explain_code(args.file_path)
+        print(explanation)
     else:
-        print("No valid command provided. Use 'analyze', 'prompt', or 'config'.")
+        print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
 
 
 def run():

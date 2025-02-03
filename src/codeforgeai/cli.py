@@ -61,8 +61,11 @@ def main():
             engine.run_analysis()
     elif args.command == "prompt":
         engine.process_prompt(args.user_prompt)
+    elif args.command == "explain":
+        explanation = engine.explain_code(args.file_path)
+        print(explanation)
     else:
-        print("No valid command provided. Use 'analyze', 'prompt', 'strip' or 'config'.")
+        print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
 
 if __name__ == "__main__":
     main()
