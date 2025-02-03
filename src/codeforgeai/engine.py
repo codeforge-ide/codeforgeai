@@ -2,7 +2,7 @@ import os
 import json
 import logging  # new import
 from codeforgeai.config import load_config
-from codeforgeai.directory import analyze_directory
+from codeforgeai.directory import analyze_directory, loop_analyze_directory
 from codeforgeai.models.general_model import GeneralModel
 from codeforgeai.models.code_model import CodeModel
 from codeforgeai.file_manager import apply_changes
@@ -18,6 +18,10 @@ class Engine:
 
     def run_analysis(self):
         analyze_directory()
+
+    def run_analysis_loop(self):
+        print("Starting adaptive feedback loop for directory analysis (Ctrl+C to stop).")
+        loop_analyze_directory()
 
     def process_prompt(self, user_prompt):
         raw_prompt = " ".join(user_prompt)

@@ -31,7 +31,10 @@ def main():
     
     engine = Engine()
     if args.command == "analyze":
-        engine.run_analysis()
+        if getattr(args, "loop", False):
+            engine.run_analysis_loop()
+        else:
+            engine.run_analysis()
     elif args.command == "prompt":
         engine.process_prompt(args.user_prompt)
     else:

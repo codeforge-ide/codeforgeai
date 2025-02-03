@@ -2,6 +2,7 @@ import os
 import json
 import subprocess
 import logging
+import time
 from codeforgeai.models.code_model import CodeModel
 from codeforgeai.models.general_model import GeneralModel
 from codeforgeai.config import load_config
@@ -245,3 +246,77 @@ def _classify_walk(node, code_model, prompt, file_class_map, base_path):
     elif isinstance(node, list):
         for item in node:
             _classify_walk(item, code_model, prompt, file_class_map, base_path)
+
+
+def loop_analyze_directory():
+    file_mod_times = {}
+    while True:
+        # 1. Refresh classification
+        try:
+            analyze_directory()
+        except Exception as e:
+            logging.error("Error during analyze_directory: %s", e)
+
+        # 2. Load .codeforge.json robustly
+        try:
+            with open(".codeforge.json") as f:
+                classification = json.load(f)
+        except Exception as e:
+            logging.error("Error loading .codeforge.json: %s", e)
+            classification = {}
+
+        updated = False
+        file_class_map = classification.get("file_classification", {})
+        keys_to_remove = []
+
+        # 3. Iterate over classified files to check modifications and correct paths
+        for fpath in list(file_class_map.keys()):
+            # Ensure file path is relative to current working directory
+            rel_path = os.path.relpath(fpath, os.getcwd())
+            if rel_path != fpath:
+                file_class_map[rel_path] = file_class_map.pop(fpath)
+                fpath = rel_path
+                updated = True
+            try:
+                if os.path.exists(fpath):
+                    mtime = os.path.getmtime(fpath)
+                    if fpath not in file_mod_times:
+                        file_mod_times[fpath] = mtime
+                    elif mtime != file_mod_times[fpath]:
+                        # Files with frequent edits are reclassified as user code
+                        file_class_map[fpath] = "user code file"
+                        file_mod_times[fpath] = mtime
+                        updated = True
+                else:
+                    logging.warning("File not found; removing classification for: %s", fpath)
+                    keys_to_remove.append(fpath)
+                    updated = True
+            except Exception as e:
+                logging.error("Error checking file %s: %s", fpath, e)
+
+        for key in keys_to_remove:
+            file_class_map.pop(key, None)
+
+        # 4. Scan for new files not yet classified; mark them as "unclassified"
+        try:
+            for root, _, files in os.walk("."):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    rel_full = os.path.relpath(full_path, os.getcwd())
+                    if rel_full not in file_class_map:
+                        file_class_map[rel_full] = "unclassified"
+                        updated = True
+        except Exception as e:
+            logging.error("Error scanning for new files: %s", e)
+
+        if updated:
+            classification["file_classification"] = file_class_map
+            try:
+                with open(".codeforge.json", "w") as fw:
+                    json.dump(classification, fw, indent=4)
+                logging.debug("Updated .codeforge.json with new classifications.")
+            except Exception as e:
+                logging.error("Error writing updated .codeforge.json: %s", e)
+
+        print("Feedback loop iteration complete. Press Ctrl+C to exit.")
+        time.sleep(5)
