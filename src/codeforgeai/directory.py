@@ -43,11 +43,16 @@ def analyze_directory():
     code_model = CodeModel(code_model_name)
     classification_result = code_model.send_request(full_prompt)
     
-    try:
-        classification_json = json.loads(classification_result)
-    except Exception as e:
-        print("Error parsing classification result:", e)
+    # Check if the response is empty or whitespace.
+    if not classification_result.strip():
+        print("Received empty response from code model; falling back to current classification.")
         classification_json = current_classification
+    else:
+        try:
+            classification_json = json.loads(classification_result)
+        except Exception as e:
+            print("Error parsing classification result:", e)
+            classification_json = current_classification
     
     # Update .codeforge.json with the refined classification.
     with open(json_path, "w") as f:
