@@ -1,0 +1,9 @@
+{
+    "language": "Python",
+    "src_directory": "././src",
+    "short_description": "Comprehensive List of Badges You Can Include in Your README:\n\n1. `Image: GitHub API Badge <https://img.shields.io/badge/-GitHub-blue>`_\n   (replace with your company's or project's name)\n2. `Image: Coveralls Badge <https://coveralls.io/r/USERNAME>`_\n3. `Image: PyPI Server Badge <https://img.shields.io/pypi/v/-PACKAGENAME>`_\n4. `Image: Python-Server Badge <https://pypi.org/project/-PROJECT->`_\n5. `Image: Conda-Forge Badge <https://anaconda.org/conda-forge/-/conda-forge>`_\n6. `Image: Monthly Download Count Badge <https://pepy.tech/user/-USERNAME>`_\n7. `Image: Twitter Link Badge <https://img.shields.io/twitter/url/-USERNAME>`_\n8. `Image: PyScaffold Badge <https://pyscaffold.org/>`_\n9. |assistant|\n10. `PyScaffold-Notes`: Add a brief description of your project here!",
+    "repository": "origin\thttps://github.com/codeforge-ide/codeforgeai.git (fetch)",
+    "author": "nathfavour",
+    "author_email": "116535483+nathfavour@users.noreply.github.com",
+    "file_classification": {}
+}
