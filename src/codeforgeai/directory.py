@@ -33,10 +33,7 @@ def analyze_directory():
     config = load_config(config_path)
     
     # Get the directory classification prompt from config.
-    directory_prompt = config.get(
-        "directory_classification_prompt",
-        "take this tree structure and help to better classify the files into actual useful user code files, useless template files and ignorable files, and source control files. return the classification in a json format like specified and return nothing else"
-    )
+    directory_prompt = config["directory_classification_prompt"]
     
     full_prompt = f"{directory_prompt}\n{combined_message}"
     logging.debug("Directory Analyzer: Full prompt to code model: %s", full_prompt)
