@@ -130,6 +130,22 @@ def extract_code_blocks(text):
     blocks = re.findall(pattern, text, flags=re.DOTALL)
     return blocks
 
+def format_code_blocks(text, separator):
+    """Extract and format code blocks:
+       - Remove a single-word first line if present (language descriptor).
+       - Join code blocks with a separator (a number of newlines).
+    """
+    blocks = extract_code_blocks(text)
+    formatted_blocks = []
+    for block in blocks:
+        lines = block.splitlines()
+        if lines and " " not in lines[0].strip():
+            # Remove first line assuming it's a language descriptor.
+            lines = lines[1:]
+        formatted_blocks.append("\n".join(lines))
+    sep_str = "\n" * separator
+    return sep_str.join(formatted_blocks)
+
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -169,6 +185,11 @@ def parse_args(args):
     extract_parser = subparsers.add_parser("extract", help="Extract code blocks from file or string")
     extract_parser.add_argument("--file", help="Path to the file to process")
     extract_parser.add_argument("--string", help="Input string containing code blocks")
+
+    # New subcommand: format
+    format_parser = subparsers.add_parser("format", help="Format code blocks for readability")
+    format_parser.add_argument("--file", help="Path to the file to process")
+    format_parser.add_argument("--string", help="Input string containing code blocks")
 
     parser.add_argument(
         "-v", "--verbose",
@@ -247,6 +268,26 @@ def main(args):
             print(json.dumps(blocks, indent=4))
         else:
             print("No file or string provided for extraction.")
+        return
+    elif args.command == "format":
+        # Load format_line_separator from config
+        from codeforgeai.config import load_config
+        # Use the same config_path used in skeleton
+        config_path = os.path.expanduser("~/.codeforgeai.json")
+        config_data = load_config(config_path)
+        separator = config_data.get("format_line_separator", 1)
+        if args.file:
+            with open(args.file, "r") as f:
+                content = f.read()
+            formatted = format_code_blocks(content, separator)
+            with open(args.file, "w") as f:
+                f.write(formatted)
+            print("Formatted code blocks written to file.")
+        elif args.string:
+            formatted = format_code_blocks(args.string, separator)
+            print(formatted)
+        else:
+            print("No file or string provided for formatting.")
         return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
