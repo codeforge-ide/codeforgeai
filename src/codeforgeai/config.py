@@ -10,6 +10,8 @@ def create_default_config(config_path):
         "directory_classification_prompt": "Given the complete tree structure below as valid JSON, recursively process every single file and directory (based on its relative path) that is present. For each node, assign exactly one classification: 'useful' for files and directories that developers interact with, 'useless' for build, template, or temporary files and directories, and 'source' for source control or related files. For every node, return an object with the keys: 'type' (either 'file' or 'directory'), 'name', 'contents' (an array of child entries for directories, or file details for files), and a new key 'classification' that holds one of 'useful', 'useless', or 'source'. Ensure every file and directory from the input is included exactly once with one classification. Return only valid JSON with this structure and nothing else.",
         "debug": False,
         "format_line_separator": 5,
+        "code_or_command": "reply with either code or command only; is the below request best satisfied with a code response or command response:",
+        "command_agent_prompt": "one for each line and nothing else, return a list of commands that can be executed to achieve the below request, and nothing else:",
         "prompt_finetune_prompt": "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else",
         "language_classification_prompt": "in one word only, what programming language is used in this project tree structure",
         "readme_summary_prompt": "in one short sentence only, generate a concise summary of this text below, and nothing else",

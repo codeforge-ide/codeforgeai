@@ -191,6 +191,10 @@ def parse_args(args):
     format_parser.add_argument("--file", help="Path to the file to process")
     format_parser.add_argument("--string", help="Input string containing code blocks")
 
+    # New subcommand: command
+    command_parser = subparsers.add_parser("command", help="Process a command request")
+    command_parser.add_argument("user_command", nargs="+", help="User input command")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -288,6 +292,30 @@ def main(args):
             print(formatted)
         else:
             print("No file or string provided for formatting.")
+        return
+    elif args.command == "command":
+        # Get user command as string
+        user_input = " ".join(args.user_command)
+        
+        # Stage 1: Prompt general model with code_or_command prompt.
+        code_or_command_prompt = config.get("code_or_command", 
+            "reply with either code or command only; is the below request best satisfied with a code response or command response:")
+        full_prompt = f"{code_or_command_prompt}\n{user_input}"
+        response = call_general_ai(full_prompt, config)
+        
+        # Check if 'command' appears before 'code'
+        pos_command = response.lower().find("command")
+        pos_code = response.lower().find("code")
+        if pos_command != -1 and (pos_code == -1 or pos_command < pos_code):
+            # Stage 2: Prompt the code model with command_agent_prompt and the same user input.
+            command_agent_prompt = config.get("command_agent_prompt", 
+                "one for each line and nothing else, return a list of commands that can be executed to achieve the below request, and nothing else:")
+            final_prompt = f"{command_agent_prompt}\n{user_input}"
+            final_response = call_code_ai(final_prompt)
+            print(final_response)
+        else:
+            # Do not proceed if condition is not met.
+            print("The request was not classified as a command.")
         return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
