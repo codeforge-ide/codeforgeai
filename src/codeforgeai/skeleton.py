@@ -221,15 +221,7 @@ def setup_logging(loglevel):
 
 
 def main(args):
-    """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
-
-    Instead of returning the value from :func:`fib`, it prints the result to the
-    ``stdout`` in a nicely formatted message.
-
-    Args:
-      args (List[str]): command line parameters as list of strings
-          (for example  ``["--verbose", "42"]``).
-    """
+    global config  # add this line to use the module-level config variable
     args = parse_args(args)
     loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
     setup_logging(loglevel)
@@ -314,7 +306,6 @@ def main(args):
             final_response = call_code_ai(final_prompt)
             print(final_response)
         else:
-            # Do not proceed if condition is not met.
             print("The request was not classified as a command.")
         return
     else:
