@@ -124,7 +124,10 @@ class Engine:
                 "commit_message_prompt",
                 "Generate a very short and very concise, one sentence commit message for these code changes:"
             )
-            # Send only one prompt to the code model instead of the general model.
+
+            # Send only one prompt to the code model instead of the general model for improved accuracy.
+            # accuracy has to be improved
+            
             full_msg = self.code_model.send_request(f"{commit_message_prompt}\n{diff}").strip()
             # Extract first sentence only.
             first_sentence = full_msg.split('.')[0].strip()
