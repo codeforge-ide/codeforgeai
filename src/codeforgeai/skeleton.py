@@ -203,6 +203,12 @@ def parse_args(args):
     edit_parser.add_argument("--allow-ignore", action="store_true",
                              help="Allow explicitly passed directories to be processed even if .gitignore ignores them")
 
+    # New subcommand: suggestion
+    suggestion_parser = subparsers.add_parser("suggestion", help="Short suggestions from code model at lightning speed")
+    suggestion_parser.add_argument("--file", help="File to read code from (defaults to last line unless --line is specified)")
+    suggestion_parser.add_argument("--line", type=int, help="Line number to use for suggestion")
+    suggestion_parser.add_argument("--string", nargs="*", help="User-provided code snippet for suggestion")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -388,6 +394,46 @@ def main(args):
             _logger.debug("Edit command: Completed processing all files")
         except Exception as e:
             _logger.error(f"Edit command failed: {e}")
+    elif args.command == "suggestion":
+        suggestion_prompt = config.get("suggestion_prompt", "Provide a short suggestion:")
+        input_code = None
+
+        if args.string:
+            # User-provided code snippet
+            input_code = " ".join(args.string)
+            suggestion_response = call_code_ai(f"{suggestion_prompt}\n{input_code}")
+            suggested_code = format_code_blocks(suggestion_response, 1)
+            print(suggested_code)
+            return
+        elif args.file:
+            # File-based suggestion
+            try:
+                with open(args.file, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                target_line_index = args.line - 1 if args.line else len(lines) - 1
+                if target_line_index < 0 or target_line_index >= len(lines):
+                    print("Invalid line number for suggestion.")
+                    return
+
+                # Use the target line
+                target_line = lines[target_line_index].rstrip("\n")
+                suggestion_response = call_code_ai(f"{suggestion_prompt}\n{target_line}")
+                suggested_line = format_code_blocks(suggestion_response, 1).strip("\n")
+
+                # Replace just the target line
+                lines[target_line_index] = f"{suggested_line}\n"
+
+                # Save modified content
+                out_path = f"{args.file}.cfsuggestions"
+                with open(out_path, "w", encoding="utf-8") as outf:
+                    outf.writelines(lines)
+
+                print(f"Suggestion applied to {out_path}")
+            except Exception as e:
+                _logger.error(f"Error handling suggestion for {args.file}: {e}")
+        else:
+            print("No input provided for suggestion (use --string or --file).")
+        return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
