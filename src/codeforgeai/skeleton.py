@@ -40,7 +40,7 @@ __license__ = "MIT"
 _logger = logging.getLogger(__name__)
 
 # Load configuration
-config_path = "~/.codeforgeai.json"
+config_path = os.path.expanduser("~/.codeforgeai.json")
 config = load_config(config_path)
 
 # Initialize models with configuration values
