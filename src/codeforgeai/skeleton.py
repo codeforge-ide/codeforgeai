@@ -281,7 +281,7 @@ def main(args):
             with open(args.file, "r") as f:
                 content = f.read()
             formatted = format_code_blocks(content, separator)
-            with open(args.file, "w") as f):
+            with open(args.file, "w") as f:
                 f.write(formatted)
             print("Formatted code blocks written to file.")
         elif args.string:
