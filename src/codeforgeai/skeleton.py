@@ -344,18 +344,17 @@ def main(args):
             "attend to the below prompt, editing the provided code and returning nothing but the edited code:")
 
         for rel_path in rel_paths:
-            full_path = os.path.join(os.getcwd(), rel_path)
-            with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(rel_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             # Build the combined prompt per file
             combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{rel_path}\n{content}"
             response = call_code_ai(combined_prompt)
             # Extract formatted code
             edited_code = format_code_blocks(response, separator=config.get("format_line_separator", 1))
-            out_path = f"{full_path}.codeforgedit"
+            out_path = f"{rel_path}.codeforgedit"
             with open(out_path, "w", encoding="utf-8") as outf:
                 outf.write(edited_code)
-            print(f"Edited code saved to: {os.path.relpath(out_path, os.getcwd())}")
+            print(f"Edited code saved to: {out_path}")
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
