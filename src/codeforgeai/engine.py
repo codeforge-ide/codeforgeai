@@ -104,7 +104,13 @@ class Engine:
                 stderr=subprocess.PIPE
             ).strip()
             if not diff:
-                return self.generate_commit_message("No staged changes found")
+                diff = subprocess.check_output(
+                    ["git", "diff", "--name-status", "HEAD"],
+                    text=True,
+                    stderr=subprocess.PIPE
+                ).strip()
+            if not diff:
+                return self.generate_commit_message("No changes found")
             
             commit_message_prompt = self.config.get(
                 "commit_message_prompt",
