@@ -199,6 +199,9 @@ def parse_args(args):
     edit_parser = subparsers.add_parser("edit", help="Edit code in specified files or folders")
     edit_parser.add_argument("paths", nargs="+", help="Files or directories to edit")
     edit_parser.add_argument("--user_prompt", nargs="+", required=True, help="User prompt for editing")
+    # Added --allow-ignore
+    edit_parser.add_argument("--allow-ignore", action="store_true",
+                             help="Allow explicitly passed directories to be processed even if .gitignore ignores them")
 
     parser.add_argument(
         "-v", "--verbose",
@@ -321,17 +324,23 @@ def main(args):
         _logger.debug("Edit command: Starting file collection...")
         ignore_patterns = parse_gitignore()
 
-        def gather_files(paths):
-            """Recursively collect files from the given paths, skipping ignored items."""
+        # Modified gather_files to handle allow_ignore
+        def gather_files(paths, allow_ignore=False):
             collected = []
             for p in paths:
                 abs_p = os.path.abspath(p)
                 _logger.debug(f"Processing path: {abs_p}")
+
                 if os.path.isfile(abs_p):
                     if not should_ignore(abs_p, ignore_patterns):
                         collected.append(abs_p)
                         _logger.debug(f"Added file: {abs_p}")
                 elif os.path.isdir(abs_p):
+                    # If allow_ignore is set, add directory itself
+                    if allow_ignore and not abs_p in collected:
+                        collected.append(abs_p)
+                        _logger.debug(f"Allowed directory: {abs_p}")
+
                     for root, dirs, files in os.walk(abs_p):
                         dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), ignore_patterns)]
                         for f in files:
@@ -342,7 +351,7 @@ def main(args):
             return collected
 
         try:
-            files_to_edit = gather_files(args.paths)
+            files_to_edit = gather_files(args.paths, args.allow_ignore)
             _logger.debug(f"Found {len(files_to_edit)} files to process")
             
             # Convert to relative paths and sort
