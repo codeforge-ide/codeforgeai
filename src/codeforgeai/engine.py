@@ -39,7 +39,7 @@ class Engine:
             
         code_prompt = self.config.get("code_prompt", "")
         full_code_prompt = f"{code_prompt}\n{finetuned_response}"
-        final_response = self.code_model.send_request(full_code_prompt)
+        final_response = self.general_model.send_request(full_code_prompt)
         
         return final_response
 
@@ -96,28 +96,27 @@ class Engine:
         return f"{emoji} {commit_msg}"
 
     def process_commit_message(self):
-        """Get git diff and generate commit message with emoji, using a fast, simple algorithm."""
+        """Quickly generate a one-sentence commit message with an emoji using only the general model."""
         try:
-            # Use a lightweight diff summary
             diff = subprocess.check_output(
-                ["git", "diff", "--cached", "--stat"],
+                ["git", "diff", "--name-status", "--cached"],
                 text=True,
                 stderr=subprocess.PIPE
-            )
-            if not diff.strip():
+            ).strip()
+            if not diff:
                 return self.generate_commit_message("No staged changes found")
-            # Simple heuristic to choose a base commit message
-            lower_diff = diff.lower()
-            if "modified" in lower_diff:
-                base_msg = "Update files"
-            elif "new file" in lower_diff or "added" in lower_diff:
-                base_msg = "Add files"
-            elif "deleted" in lower_diff:
-                base_msg = "Remove files"
-            else:
-                base_msg = "Update code changes"
-            return self.generate_commit_message(base_msg)
-        except subprocess.CalledProcessError as e:
-            return self.generate_commit_message("No staged changes found")
+            
+            commit_message_prompt = self.config.get(
+                "commit_message_prompt",
+                "Generate a very short and very concise, one sentence commit message for these code changes:"
+            )
+            # Send only one prompt to the general model.
+            full_msg = self.general_model.send_request(f"{commit_message_prompt}\n{diff}").strip()
+            # Extract first sentence only.
+            first_sentence = full_msg.split('.')[0].strip()
+            if first_sentence and not first_sentence.endswith('.'):
+                first_sentence += '.'
+            return self.generate_commit_message(first_sentence)
         except Exception as e:
+            logging.error(f"Error generating commit message: {e}")
             return self.generate_commit_message("Update code changes")

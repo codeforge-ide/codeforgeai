@@ -29,7 +29,7 @@ import re
 from codeforgeai.config import load_config   # <-- Added import
 
 from codeforgeai import __version__
-from codeforgeai.engine import Engine
+from codeforgeai.engine import Engine as CodeforgeEngine
 from codeforgeai.models.general_model import GeneralModel
 from codeforgeai.models.code_model import CodeModel
 
@@ -257,7 +257,7 @@ def main(args):
     if args.command == "analyze":
         # Instead of calling the dummy function,
         # call Engine().run_analysis() to leverage the code AI model
-        eng = Engine()
+        eng = CodeforgeEngine()
         eng.run_analysis()
     elif args.command == "prompt":
         process_prompt(args.user_prompt)
@@ -266,7 +266,7 @@ def main(args):
         strip_directory()
         return
     elif args.command == "explain":
-        eng = Engine()
+        eng = CodeforgeEngine()
         explanation = eng.explain_code(args.file_path)
         print(explanation)
     elif args.command == "extract":
@@ -459,25 +459,9 @@ def main(args):
             print("No input provided for suggestion (use --string or --file).")
         return
     elif args.command == "commit-message":
-        import subprocess, re
-        changes = subprocess.check_output(["git", "diff", "--unified=0", "HEAD"], text=True)
-        commit_message_prompt = config.get("commit_message_prompt", 
-            "Generate a one sentence, very concise commit message for the below code changes:")
-        commit_msg = code_model.send_request(f"{commit_message_prompt}\n{changes}").strip()
-        gitmoji_path = os.path.expanduser("~/.gitmoji/gitmojis.json")
-        if os.path.exists(gitmoji_path):
-            with open(gitmoji_path, "r", encoding="utf-8") as f:
-                gitmojis_content = f.read()
-            gitmoji_prompt = config.get("gitmoji_prompt", 
-                "Based on the following commit message, return only ONE emoji (and nothing else) that best represents it:")
-            gitmoji_request = f"{gitmoji_prompt}\n{commit_msg}\n{gitmojis_content}"
-            emoji_response = general_model.send_request(gitmoji_request, config).strip()
-            match = re.search(r'([\U0001F300-\U0001FAD6])', emoji_response)
-            emoji = match.group(1) if match else ""
-            final_message = f"{emoji} {commit_msg}"
-        else:
-            final_message = commit_msg
-        print(final_message)
+        eng = CodeforgeEngine()
+        commit_msg = eng.process_commit_message()
+        print(commit_msg)
         return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
