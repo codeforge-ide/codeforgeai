@@ -85,3 +85,19 @@ This project is MIT licensed. Enjoy, share, and innovate with CodeforgeAI! 🆓
 ---
 
 Thank you for choosing CodeforgeAI – where creativity meets code. Happy coding! 🎊💫
+
+## Troubleshooting 🛠️
+- Ensure your configuration file at `~/.codeforgeai.json` is properly set up.
+- If the commit-message subcommand returns "No changes found" unexpectedly, verify that there are staged, tracked, or untracked changes.
+- Check your internet connectivity if AI model requests fail.
+- Review the logs (if running in debug mode) for detailed error messages.
+
+## FAQ ❓
+- **Q:** How do I update the configuration?  
+  **A:** Edit the `~/.codeforgeai.json` file to customize prompts and model settings.
+- **Q:** Which models are used for AI tasks?  
+  **A:** `general_model` is used for prompt rephrasing and initial processing, while `code_model` handles code-specific requests (e.g., commit messages, explanations).
+- **Q:** How can I contribute to CodeforgeAI?  
+  **A:** Fork the repository, make improvements, and submit a pull request with a clear commit message.
+- **Q:** Where can I find more documentation?  
+  **A:** Additional usage details can be found in the repository’s wiki and inline code documentation.
