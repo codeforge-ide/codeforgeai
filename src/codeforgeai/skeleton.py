@@ -315,8 +315,8 @@ def main(args):
         return
     elif args.command == "edit":
         from codeforgeai.directory import parse_gitignore, should_ignore
+        from codeforgeai.engine import Engine
         import os
-
         ignore_patterns = parse_gitignore()
 
         def gather_files(paths):
@@ -343,13 +343,14 @@ def main(args):
         edit_finetune_prompt = config.get("edit_finetune_prompt", 
             "attend to the below prompt, editing the provided code and returning nothing but the edited code:")
 
+        eng = Engine()  # Initialize Engine for code_model usage
+
         for rel_path in rel_paths:
             with open(rel_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             # Build the combined prompt per file
             combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{rel_path}\n{content}"
-            response = call_code_ai(combined_prompt)
-            # Extract formatted code
+            response = eng.code_model.send_request(combined_prompt)  # Synchronous call
             edited_code = format_code_blocks(response, separator=config.get("format_line_separator", 1))
             out_path = f"{rel_path}.codeforgedit"
             with open(out_path, "w", encoding="utf-8") as outf:
