@@ -54,3 +54,4 @@ MANIFEST
 .python-version
 
 .env
+.codeforge/
