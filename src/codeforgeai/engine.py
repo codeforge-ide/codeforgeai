@@ -110,8 +110,16 @@ class Engine:
                     stderr=subprocess.PIPE
                 ).strip()
             if not diff:
+                # Check untracked files if no diff found
+                untracked = subprocess.check_output(
+                    ["git", "ls-files", "--others", "--exclude-standard"],
+                    text=True,
+                    stderr=subprocess.PIPE
+                ).strip()
+                if untracked:
+                    diff = "Untracked files:\n" + untracked
+            if not diff:
                 return self.generate_commit_message("No changes found")
-            
             commit_message_prompt = self.config.get(
                 "commit_message_prompt",
                 "Generate a very short and very concise, one sentence commit message for these code changes:"
