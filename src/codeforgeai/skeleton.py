@@ -208,6 +208,9 @@ def parse_args(args):
     suggestion_parser.add_argument("--file", help="File to read code from (defaults to last line unless --line is specified)")
     suggestion_parser.add_argument("--line", type=int, help="Line number to use for suggestion")
     suggestion_parser.add_argument("--string", nargs="*", help="User-provided code snippet for suggestion")
+    # New optional flag
+    suggestion_parser.add_argument("--entire", "-E", action="store_true",
+                                   help="Send entire file content for suggestion (must be typed as one token: --entire)")
 
     parser.add_argument(
         "-v", "--verbose",
@@ -406,29 +409,40 @@ def main(args):
             print(suggested_code)
             return
         elif args.file:
-            # File-based suggestion
             try:
                 with open(args.file, "r", encoding="utf-8") as f:
                     lines = f.readlines()
-                target_line_index = args.line - 1 if args.line else len(lines) - 1
-                if target_line_index < 0 or target_line_index >= len(lines):
-                    print("Invalid line number for suggestion.")
-                    return
 
-                # Use the target line
-                target_line = lines[target_line_index].rstrip("\n")
-                suggestion_response = call_code_ai(f"{suggestion_prompt}\n{target_line}")
-                suggested_line = format_code_blocks(suggestion_response, 1).strip("\n")
+                if args.entire:
+                    # Entire file approach
+                    entire_content = "".join(lines)
+                    suggestion_response = call_code_ai(f"{suggestion_prompt}\n{entire_content}")
+                    suggested_output = format_code_blocks(suggestion_response, 1)
+                    out_path = f"{args.file}.cfsuggestions"
+                    with open(out_path, "w", encoding="utf-8") as outf:
+                        outf.write(suggested_output)
+                    print(f"Suggestion applied to {out_path}")
+                else:
+                    # File-based suggestion
+                    target_line_index = args.line - 1 if args.line else len(lines) - 1
+                    if target_line_index < 0 or target_line_index >= len(lines):
+                        print("Invalid line number for suggestion.")
+                        return
 
-                # Replace just the target line
-                lines[target_line_index] = f"{suggested_line}\n"
+                    # Use the target line
+                    target_line = lines[target_line_index].rstrip("\n")
+                    suggestion_response = call_code_ai(f"{suggestion_prompt}\n{target_line}")
+                    suggested_line = format_code_blocks(suggestion_response, 1).strip("\n")
 
-                # Save modified content
-                out_path = f"{args.file}.cfsuggestions"
-                with open(out_path, "w", encoding="utf-8") as outf:
-                    outf.writelines(lines)
+                    # Replace just the target line
+                    lines[target_line_index] = f"{suggested_line}\n"
 
-                print(f"Suggestion applied to {out_path}")
+                    # Save modified content
+                    out_path = f"{args.file}.cfsuggestions"
+                    with open(out_path, "w", encoding="utf-8") as outf:
+                        outf.writelines(lines)
+
+                    print(f"Suggestion applied to {out_path}")
             except Exception as e:
                 _logger.error(f"Error handling suggestion for {args.file}: {e}")
         else:
