@@ -281,7 +281,7 @@ def main(args):
             with open(args.file, "r") as f:
                 content = f.read()
             formatted = format_code_blocks(content, separator)
-            with open(args.file, "w") as f:
+            with open(args.file, "w") as f):
                 f.write(formatted)
             print("Formatted code blocks written to file.")
         elif args.string:
@@ -315,19 +315,20 @@ def main(args):
         return
     elif args.command == "edit":
         from codeforgeai.directory import parse_gitignore, should_ignore
+        import os
+
         ignore_patterns = parse_gitignore()
 
         def gather_files(paths):
             """Recursively collect files from the given paths, skipping ignored items."""
             collected = []
             for p in paths:
-                p = os.path.abspath(p)
-                if os.path.isfile(p):
-                    if not should_ignore(p, ignore_patterns):
-                        collected.append(p)
-                elif os.path.isdir(p):
-                    for root, dirs, files in os.walk(p):
-                        # Filter directories so we don't descend into ignored ones
+                abs_p = os.path.abspath(p)
+                if os.path.isfile(abs_p):
+                    if not should_ignore(abs_p, ignore_patterns):
+                        collected.append(abs_p)
+                elif os.path.isdir(abs_p):
+                    for root, dirs, files in os.walk(abs_p):
                         dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), ignore_patterns)]
                         for f in files:
                             fp = os.path.join(root, f)
@@ -336,22 +337,25 @@ def main(args):
             return collected
 
         files_to_edit = gather_files(args.paths)
+        # Convert to relative paths and sort to group files by proximity
+        rel_paths = sorted([os.path.relpath(fp, os.getcwd()) for fp in files_to_edit])
         user_edit_prompt = " ".join(args.user_prompt)
-        edit_finetune_prompt = config.get("edit_finetune_prompt", "Edit the code below:")
+        edit_finetune_prompt = config.get("edit_finetune_prompt", 
+            "attend to the below prompt, editing the provided code and returning nothing but the edited code:")
 
-        for file_path in files_to_edit:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        for rel_path in rel_paths:
+            full_path = os.path.join(os.getcwd(), rel_path)
+            with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
-            # Build the prompt
-            combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{file_path}\n{content}"
+            # Build the combined prompt per file
+            combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{rel_path}\n{content}"
             response = call_code_ai(combined_prompt)
             # Extract formatted code
             edited_code = format_code_blocks(response, separator=config.get("format_line_separator", 1))
-            
-            out_path = f"{file_path}.codeforgedit"
+            out_path = f"{full_path}.codeforgedit"
             with open(out_path, "w", encoding="utf-8") as outf:
                 outf.write(edited_code)
-            print(f"Edited code saved to: {out_path}")
+            print(f"Edited code saved to: {os.path.relpath(out_path, os.getcwd())}")
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
