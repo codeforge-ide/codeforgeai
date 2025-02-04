@@ -12,7 +12,8 @@ def create_default_config(config_path):
         "prompt_finetune_prompt": "in a clear and concise manner, rephrase the following prompt to be more understandable to a coding ai agent, return the rephrased prompt and nothing else",
         "language_classification_prompt": "in one word only, what programming language is used in this project tree structure",
         "readme_summary_prompt": "in one short sentence only, generate a concise summary of this text below, and nothing else",
-        "specific_file_classification": "taking the path and content of this file and classify it into either only user code file or project code file or source control file"
+        "specific_file_classification": "taking the path and content of this file and classify it into either only user code file or project code file or source control file",
+        "improve_code_prompt": "given this block of code, improve the code generally and return nothing but the improved code:"
     }
     # Expand the user directory
     config_path = os.path.expanduser(config_path)

@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import sys
+import re
 from codeforgeai.config import load_config   # <-- Added import
 
 from codeforgeai import __version__
@@ -123,6 +124,12 @@ def explain_code(file_path):
     response = call_code_ai(prompt)
     return response
 
+def extract_code_blocks(text):
+    """Return a list of code blocks found between triple backticks."""
+    pattern = r"```(.*?)```"
+    blocks = re.findall(pattern, text, flags=re.DOTALL)
+    return blocks
+
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -157,6 +164,11 @@ def parse_args(args):
     # Add explain subcommand
     explain_parser = subparsers.add_parser("explain", help="Explain the code in the given file")
     explain_parser.add_argument("file_path", help="Path to the file to be explained")
+
+    # Add extract subcommand
+    extract_parser = subparsers.add_parser("extract", help="Extract code blocks from file or string")
+    extract_parser.add_argument("--file", help="Path to the file to process")
+    extract_parser.add_argument("--string", help="Input string containing code blocks")
 
     parser.add_argument(
         "-v", "--verbose",
@@ -220,6 +232,22 @@ def main(args):
         eng = Engine()
         explanation = eng.explain_code(args.file_path)
         print(explanation)
+    elif args.command == "extract":
+        # read from file if present, else use string
+        if args.file:
+            with open(args.file, "r") as f:
+                content = f.read()
+            blocks = extract_code_blocks(content)
+            json_output = json.dumps(blocks, indent=4)
+            with open(args.file, "w") as f:
+                f.write(json_output)
+            print("Extracted code blocks written to file as JSON.")
+        elif args.string:
+            blocks = extract_code_blocks(args.string)
+            print(json.dumps(blocks, indent=4))
+        else:
+            print("No file or string provided for extraction.")
+        return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
 
