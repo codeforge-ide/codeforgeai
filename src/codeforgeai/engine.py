@@ -1,8 +1,9 @@
 import os
 import json
 import logging
-import re            # <-- Added import
-import random        # <-- Added import
+import re
+import random
+import subprocess
 from codeforgeai.config import load_config
 from codeforgeai.directory import analyze_directory, loop_analyze_directory
 from codeforgeai.models.general_model import GeneralModel
@@ -52,43 +53,71 @@ class Engine:
         response = self.code_model.send_request(prompt)
         return response
 
-    # ---- New Commit-Message Methods ----
     def generate_commit_message(self, commit_msg):
         """
-        Generate a commit message by prepending an emoji.
-        Loads gitmoji definitions from /home/nathfavour/.gitmoji/gitmojis.json and selects
-        an emoji based on matching words from the commit message. If no match is found, selects randomly.
+        Generate a commit message by prepending an emoji based on message content.
+        Uses word matching against gitmoji descriptions to find the best emoji.
         """
         try:
-            with open("/home/nathfavour/.gitmoji/gitmojis.json", "r", encoding="utf-8") as f:
+            with open(os.path.expanduser("~/.gitmoji/gitmojis.json"), "r", encoding="utf-8") as f:
                 gitmojis = json.load(f)
-        except Exception:
-            gitmojis = []
-        # Process words in commit message
-        words = re.findall(r'\w+', commit_msg.lower())
+        except Exception as e:
+            logging.error(f"Error loading gitmojis.json: {e}")
+            return commit_msg
+
+        # Extract words from commit message
+        msg_words = set(re.findall(r'\w+', commit_msg.lower()))
+        
+        # Find best matching emoji by comparing words
         best_match = None
-        best_count = 0
+        best_score = 0
+        
         for item in gitmojis:
             desc = item.get("description", "").lower()
-            desc_words = re.findall(r'\w+', desc)
-            count = sum(1 for w in desc_words if w in words)
-            if count > best_count:
-                best_count = count
+            desc_words = set(re.findall(r'\w+', desc))
+            
+            # Count shared words
+            shared_words = msg_words & desc_words
+            score = len(shared_words)
+            
+            if score > best_score:
+                best_score = score
                 best_match = item
-        if best_match and best_count > 0:
-            emoji_char = best_match.get("emoji", "")
+
+        # Get emoji character
+        if best_match and best_score > 0:
+            emoji = best_match.get("emoji", "")
         elif gitmojis:
-            emoji_char = random.choice(gitmojis).get("emoji", "")
+            # Random emoji if no good match found
+            emoji = random.choice(gitmojis).get("emoji", "")
         else:
-            emoji_char = ""
-        return f"{emoji_char} {commit_msg}"
+            emoji = ""
+
+        return f"{emoji} {commit_msg}"
 
     def process_commit_message(self):
-        """
-        Process commit message generation.
-        Uses the commit_message_prompt from config to request a commit message from the code model,
-        then generates the final commit message using generate_commit_message.
-        """
-        commit_prompt = self.config.get("commit_message_prompt", "Generate commit message:")
-        commit_msg = self.code_model.send_request(commit_prompt)
-        return self.generate_commit_message(commit_msg)
+        """Get git diff and generate commit message with emoji, using a fast, simple algorithm."""
+        try:
+            # Use a lightweight diff summary
+            diff = subprocess.check_output(
+                ["git", "diff", "--cached", "--stat"],
+                text=True,
+                stderr=subprocess.PIPE
+            )
+            if not diff.strip():
+                return self.generate_commit_message("No staged changes found")
+            # Simple heuristic to choose a base commit message
+            lower_diff = diff.lower()
+            if "modified" in lower_diff:
+                base_msg = "Update files"
+            elif "new file" in lower_diff or "added" in lower_diff:
+                base_msg = "Add files"
+            elif "deleted" in lower_diff:
+                base_msg = "Remove files"
+            else:
+                base_msg = "Update code changes"
+            return self.generate_commit_message(base_msg)
+        except subprocess.CalledProcessError as e:
+            return self.generate_commit_message("No staged changes found")
+        except Exception as e:
+            return self.generate_commit_message("Update code changes")
