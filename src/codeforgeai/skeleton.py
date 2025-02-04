@@ -195,6 +195,11 @@ def parse_args(args):
     command_parser = subparsers.add_parser("command", help="Process a command request")
     command_parser.add_argument("user_command", nargs="+", help="User input command")
 
+    # New subcommand: edit
+    edit_parser = subparsers.add_parser("edit", help="Edit code in specified files or folders")
+    edit_parser.add_argument("paths", nargs="+", help="Files or directories to edit")
+    edit_parser.add_argument("--user_prompt", nargs="+", required=True, help="User prompt for editing")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -308,8 +313,47 @@ def main(args):
         else:
             print("The request was not classified as a command.")
         return
+    elif args.command == "edit":
+        from codeforgeai.directory import parse_gitignore, should_ignore
+        ignore_patterns = parse_gitignore()
+
+        def gather_files(paths):
+            """Recursively collect files from the given paths, skipping ignored items."""
+            collected = []
+            for p in paths:
+                p = os.path.abspath(p)
+                if os.path.isfile(p):
+                    if not should_ignore(p, ignore_patterns):
+                        collected.append(p)
+                elif os.path.isdir(p):
+                    for root, dirs, files in os.walk(p):
+                        # Filter directories so we don't descend into ignored ones
+                        dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), ignore_patterns)]
+                        for f in files:
+                            fp = os.path.join(root, f)
+                            if not should_ignore(fp, ignore_patterns):
+                                collected.append(fp)
+            return collected
+
+        files_to_edit = gather_files(args.paths)
+        user_edit_prompt = " ".join(args.user_prompt)
+        edit_finetune_prompt = config.get("edit_finetune_prompt", "Edit the code below:")
+
+        for file_path in files_to_edit:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            # Build the prompt
+            combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{file_path}\n{content}"
+            response = call_code_ai(combined_prompt)
+            # Extract formatted code
+            edited_code = format_code_blocks(response, separator=config.get("format_line_separator", 1))
+            
+            out_path = f"{file_path}.codeforgedit"
+            with open(out_path, "w", encoding="utf-8") as outf:
+                outf.write(edited_code)
+            print(f"Edited code saved to: {out_path}")
     else:
-        print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', or 'explain'.")
+        print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
 
 def run():
