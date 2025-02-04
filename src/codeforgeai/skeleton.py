@@ -414,10 +414,17 @@ def main(args):
                     lines = f.readlines()
 
                 if args.entire:
-                    # Entire file approach
                     entire_content = "".join(lines)
                     suggestion_response = call_code_ai(f"{suggestion_prompt}\n{entire_content}")
                     suggested_output = format_code_blocks(suggestion_response, 1)
+                    # New check to align first line
+                    original_first_line = lines[0].rstrip("\n")
+                    splitted_suggested = suggested_output.splitlines()
+                    if original_first_line in splitted_suggested:
+                        first_match_index = splitted_suggested.index(original_first_line)
+                        splitted_suggested = splitted_suggested[first_match_index:]
+                        suggested_output = "\n".join(splitted_suggested)
+
                     out_path = f"{args.file}.cfsuggestions"
                     with open(out_path, "w", encoding="utf-8") as outf:
                         outf.write(suggested_output)
