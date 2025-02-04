@@ -317,6 +317,8 @@ def main(args):
         from codeforgeai.directory import parse_gitignore, should_ignore
         from codeforgeai.engine import Engine
         import os
+
+        _logger.debug("Edit command: Starting file collection...")
         ignore_patterns = parse_gitignore()
 
         def gather_files(paths):
@@ -324,9 +326,11 @@ def main(args):
             collected = []
             for p in paths:
                 abs_p = os.path.abspath(p)
+                _logger.debug(f"Processing path: {abs_p}")
                 if os.path.isfile(abs_p):
                     if not should_ignore(abs_p, ignore_patterns):
                         collected.append(abs_p)
+                        _logger.debug(f"Added file: {abs_p}")
                 elif os.path.isdir(abs_p):
                     for root, dirs, files in os.walk(abs_p):
                         dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), ignore_patterns)]
@@ -334,28 +338,47 @@ def main(args):
                             fp = os.path.join(root, f)
                             if not should_ignore(fp, ignore_patterns):
                                 collected.append(fp)
+                                _logger.debug(f"Added file: {fp}")
             return collected
 
-        files_to_edit = gather_files(args.paths)
-        # Convert to relative paths and sort to group files by proximity
-        rel_paths = sorted([os.path.relpath(fp, os.getcwd()) for fp in files_to_edit])
-        user_edit_prompt = " ".join(args.user_prompt)
-        edit_finetune_prompt = config.get("edit_finetune_prompt", 
-            "attend to the below prompt, editing the provided code and returning nothing but the edited code:")
+        try:
+            files_to_edit = gather_files(args.paths)
+            _logger.debug(f"Found {len(files_to_edit)} files to process")
+            
+            # Convert to relative paths and sort
+            rel_paths = sorted([os.path.relpath(fp, os.getcwd()) for fp in files_to_edit])
+            user_edit_prompt = " ".join(args.user_prompt)
+            edit_finetune_prompt = config.get("edit_finetune_prompt", 
+                "attend to the below prompt, editing the provided code and returning nothing but the edited code:")
 
-        eng = Engine()  # Initialize Engine for code_model usage
+            eng = Engine()
+            _logger.debug("Initialized Engine for processing")
 
-        for rel_path in rel_paths:
-            with open(rel_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
-            # Build the combined prompt per file
-            combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{rel_path}\n{content}"
-            response = eng.code_model.send_request(combined_prompt)  # Synchronous call
-            edited_code = format_code_blocks(response, separator=config.get("format_line_separator", 1))
-            out_path = f"{rel_path}.codeforgedit"
-            with open(out_path, "w", encoding="utf-8") as outf:
-                outf.write(edited_code)
-            print(f"Edited code saved to: {out_path}")
+            for rel_path in rel_paths:
+                _logger.debug(f"Processing file: {rel_path}")
+                try:
+                    with open(rel_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                    
+                    combined_prompt = f"{edit_finetune_prompt}\n{user_edit_prompt}\n{rel_path}\n{content}"
+                    _logger.debug(f"Sending request to AI model for {rel_path}")
+                    
+                    response = eng.code_model.send_request(combined_prompt)
+                    _logger.debug(f"Received response from AI model for {rel_path}")
+                    
+                    edited_code = format_code_blocks(response, separator=config.get("format_line_separator", 1))
+                    out_path = f"{rel_path}.codeforgedit"
+                    
+                    with open(out_path, "w", encoding="utf-8") as outf:
+                        outf.write(edited_code)
+                    print(f"Edited code saved to: {out_path}")
+                except Exception as e:
+                    _logger.error(f"Error processing {rel_path}: {e}")
+                    continue
+            
+            _logger.debug("Edit command: Completed processing all files")
+        except Exception as e:
+            _logger.error(f"Edit command failed: {e}")
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
