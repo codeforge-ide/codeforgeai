@@ -2,7 +2,6 @@
 
 Welcome to **CodeforgeAI** – your ultimate, emoji-powered coding assistant! 🎉 Whether you're refining commit messages, analyzing your project, or editing code on the fly, CodeforgeAI has you covered. 
 
-EDITING!!!
 ## Features ✨
 - **Prompt Processing:** Transform natural language prompts into precise code edits. 💡
 - **Code Analysis:** Get detailed insights and explanations for your code. 🕵️‍♂️
