@@ -415,7 +415,9 @@ def main(args):
 
                 if args.entire:
                     entire_content = "".join(lines)
-                    suggestion_response = call_code_ai(f"{suggestion_prompt}\n{entire_content}")
+                    # Use entire_suggestion_prompt if available, else fallback to suggestion_prompt
+                    entire_suggestion_prompt = config.get("entire_suggestion_prompt", suggestion_prompt)
+                    suggestion_response = call_code_ai(f"{entire_suggestion_prompt}\n{entire_content}")
                     suggested_output = format_code_blocks(suggestion_response, 1)
                     # New check to align first line
                     original_first_line = lines[0].rstrip("\n")
