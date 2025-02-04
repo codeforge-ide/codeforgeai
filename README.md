@@ -17,6 +17,42 @@ Welcome to **CodeforgeAI** – your ultimate, emoji-powered coding assistant! �
 3. **Run:**  
    Execute the tool with commands like `analyze`, `prompt`, `edit`, or `commit-message`.
 
+## Detailed Usage
+
+### 1. Installation
+- Run `pip install .` or `pip install -e .` after cloning the repository.
+- Ensure you have a proper Python environment set up.
+
+### 2. Configuration
+- The configuration file is located at `~/.codeforgeai.json`.
+- Edit this file to update prompts, model names, and other settings. Example:
+```
+{
+  "prompts": {
+    "commit_message": "Generate a commit message for the following changes:",
+    "code_edit": "Refactor the following code for clarity:"
+  },
+  "model": "gpt-3.5-turbo"
+}
+```
+
+### 3. CLI Commands
+
+#### Generate a Commit Message
+```sh
+codeforgeai commit-message
+```
+
+#### Edit Code in a File
+```sh
+codeforgeai edit my_script.py --user_prompt "Refactor for clarity"
+```
+
+#### Analyze Your Directory
+```sh
+codeforgeai analyze --loop
+```
+
 ## Usage Examples 🤩
 - **Generate a Commit Message:**  
   ```sh
