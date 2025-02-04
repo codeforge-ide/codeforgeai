@@ -9,8 +9,8 @@ from codeforgeai.file_manager import apply_changes
 
 class Engine:
     def __init__(self):
-        # Use project-level config file instead of user home.
-        self.config_path = "/home/nathfavour/Documents/coder/codeforgeai/codeforgeai.json"
+        # Use the config file from the user's home directory
+        self.config_path = os.path.expanduser("~/.codeforgeai.json")
         self.config = load_config(self.config_path)
         self.general_model = GeneralModel(self.config.get("general_model"))
         self.code_model = CodeModel(self.config.get("code_model"))
