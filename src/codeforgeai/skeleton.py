@@ -214,6 +214,42 @@ def parse_args(args):
 
     # New subcommand: commit-message
     commit_parser = subparsers.add_parser("commit-message", help="Generate commit message with code changes and gitmoji")
+    
+    # NEW: Secret AI SDK integration subcommands
+    secret_ai_parser = subparsers.add_parser("secret-ai", help="Secret AI SDK integration commands")
+    secret_ai_subparsers = secret_ai_parser.add_subparsers(dest="secret_ai_command", help="Secret AI commands")
+    
+    # Secret AI subcommands
+    secret_ai_subparsers.add_parser("list-models", help="List available Secret AI models")
+    secret_ai_subparsers.add_parser("test-connection", help="Test Secret AI connection")
+    secret_ai_chat_parser = secret_ai_subparsers.add_parser("chat", help="Chat with Secret AI")
+    secret_ai_chat_parser.add_argument("message", nargs="+", help="Chat message")
+    
+    # NEW: Web3 subcommands
+    web3_parser = subparsers.add_parser("web3", help="Web3 development commands")
+    web3_subparsers = web3_parser.add_subparsers(dest="web3_command", help="Web3 commands")
+    
+    # Web3 subcommands
+    scaffold_parser = web3_subparsers.add_parser("scaffold", help="Scaffold a new web3 project")
+    scaffold_parser.add_argument("project_name", help="Name of the project")
+    scaffold_parser.add_argument("--type", choices=["dapp", "smart-contract", "token", "nft"], default="dapp", help="Project type")
+    scaffold_parser.add_argument("--output", help="Output directory")
+    
+    analyze_contract_parser = web3_subparsers.add_parser("analyze-contract", help="Analyze a smart contract")
+    analyze_contract_parser.add_argument("contract_file", help="Path to the smart contract")
+    
+    gas_parser = web3_subparsers.add_parser("estimate-gas", help="Estimate gas costs for a smart contract")
+    gas_parser.add_argument("contract_file", help="Path to the smart contract")
+    
+    tests_parser = web3_subparsers.add_parser("generate-tests", help="Generate tests for a smart contract")
+    tests_parser.add_argument("contract_file", help="Path to the smart contract")
+    tests_parser.add_argument("--output", help="Output directory for tests")
+    
+    web3_subparsers.add_parser("check-env", help="Check web3 development environment")
+    
+    # Web3 - install dependencies
+    web3_deps_parser = web3_subparsers.add_parser("install-deps", help="Install web3 dependencies")
+    web3_deps_parser.add_argument("--full", action="store_true", help="Install full set of dependencies")
 
     parser.add_argument(
         "-v", "--verbose",
@@ -463,8 +499,128 @@ def main(args):
         commit_msg = eng.process_commit_message()
         print(commit_msg)
         return
+    # NEW: Handle Secret AI commands
+    elif args.command == "secret-ai":
+        handle_secret_ai_commands(args)
+    # NEW: Handle Web3 commands
+    elif args.command == "web3":
+        handle_web3_commands(args)
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
+
+
+# Add handler functions for Secret AI and Web3 commands
+def handle_secret_ai_commands(args):
+    """Handle Secret AI SDK integration commands"""
+    import codeforgeai.utils as utils
+    
+    # Import inside function to avoid circular imports
+    try:
+        from codeforgeai.integrations.secret_ai.secret_ai_integration import SecretAIModel, list_secret_ai_models
+    except ImportError:
+        print("Error: Secret AI SDK integration not available. Install required packages.")
+        return
+    
+    if args.secret_ai_command == "list-models":
+        models = list_secret_ai_models()
+        if models:
+            print("Available Secret AI models:")
+            for i, model in enumerate(models, 1):
+                print(f"{i}. {model}")
+        else:
+            print("No Secret AI models available. Check your credentials.")
+    
+    elif args.secret_ai_command == "test-connection":
+        if not utils.check_secret_ai_credentials():
+            print("Error: Secret AI API key not found. Set the CLAIVE_AI_API_KEY environment variable.")
+            return
+            
+        model = SecretAIModel()
+        model_info = model.get_model_info()
+        
+        if not model_info["current_model"]:
+            print("Error: Could not connect to Secret AI. Check your credentials.")
+        else:
+            print(f"Connected to Secret AI successfully.")
+            print(f"Current model: {model_info['current_model']}")
+            print(f"Available models: {', '.join(model_info['available_models'])}")
+    
+    elif args.secret_ai_command == "chat":
+        if not utils.check_secret_ai_credentials():
+            print("Error: Secret AI API key not found. Set the CLAIVE_AI_API_KEY environment variable.")
+            return
+            
+        message = " ".join(args.message)
+        model = SecretAIModel()
+        response = model.send_request(message)
+        print("\nSecret AI response:")
+        print(response)
+    
+    else:
+        print("Invalid Secret AI command. Use 'codeforgeai secret-ai --help' to see available commands.")
+
+def handle_web3_commands(args):
+    """Handle Web3 development commands"""
+    import codeforgeai.utils as utils
+    
+    # Import inside function to avoid circular imports
+    try:
+        from codeforgeai.integrations.secret_ai.web3_commands import (
+            scaffold_web3_project, 
+            analyze_smart_contract,
+            estimate_gas_costs,
+            generate_web3_tests
+        )
+    except ImportError:
+        print("Error: Web3 integration not available. Install required packages.")
+        return
+    
+    if args.web3_command == "scaffold":
+        result = scaffold_web3_project(
+            project_name=args.project_name,
+            project_type=args.type,
+            output_dir=args.output
+        )
+        print(result)
+    
+    elif args.web3_command == "analyze-contract":
+        result = analyze_smart_contract(args.contract_file)
+        print(utils.format_smart_contract_analysis(result))
+    
+    elif args.web3_command == "estimate-gas":
+        result = estimate_gas_costs(args.contract_file)
+        print(result)
+    
+    elif args.web3_command == "generate-tests":
+        tests = generate_web3_tests(args.contract_file)
+        
+        if "error" in tests:
+            print(f"Error: {tests['error']}")
+            return
+            
+        output_dir = args.output or os.path.dirname(args.contract_file) or os.getcwd()
+        tests_dir = os.path.join(output_dir, "tests")
+        os.makedirs(tests_dir, exist_ok=True)
+        
+        for test_file, content in tests.items():
+            file_path = os.path.join(tests_dir, os.path.basename(test_file))
+            with open(file_path, "w") as f:
+                f.write(content)
+            print(f"Generated test file: {file_path}")
+    
+    elif args.web3_command == "check-env":
+        env_status = utils.check_web3_dev_environment()
+        print("Web3 Development Environment:")
+        for tool, status in env_status.items():
+            print(f"- {tool}: {status}")
+    
+    elif args.web3_command == "install-deps":
+        install_type = "full" if args.full else "minimal" 
+        result = utils.install_web3_dependencies(install_type)
+        print(result)
+    
+    else:
+        print("Invalid web3 command. Use 'codeforgeai web3 --help' to see available commands.")
 
 
 def run():
