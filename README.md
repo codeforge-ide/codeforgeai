@@ -310,5 +310,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Thanks to all contributors and users of CodeforgeAI
 - [Ollama](https://github.com/ollama/ollama) for local AI model support
-- [Secret AI SDK](https://claive.io) for advanced AI capabilities
+- [Secret AI SDK](https://docs.scrt.network/secret-network-documentation/claive-ai/introduction) for advanced AI capabilities
 - The open-source community for inspiration and tools
