@@ -55,6 +55,8 @@ def main():
         return
 
     engine = Engine()
+    
+    # Handle existing commands
     if args.command == "analyze":
         if getattr(args, "loop", False):
             engine.run_analysis_loop()
@@ -69,8 +71,127 @@ def main():
     elif args.command == "explain":
         explanation = engine.explain_code(args.file_path)
         print(explanation)
+    
+    # NEW: Handle Secret AI commands
+    elif args.command == "secret-ai":
+        handle_secret_ai_commands(args)
+    
+    # NEW: Handle Web3 commands
+    elif args.command == "web3":
+        handle_web3_commands(args)
     else:
-        print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'commit-message', or 'explain'.")
+        print("No valid command provided. Run with --help for available commands.")
+
+def handle_secret_ai_commands(args):
+    """Handle Secret AI SDK integration commands"""
+    # Import inside function to avoid circular imports
+    import codeforgeai.utils as utils
+    from codeforgeai.integrations.secret-ai-sdk.secret_ai_integration import SecretAIModel, list_secret_ai_models
+    
+    if args.secret_ai_command == "list-models":
+        # List available models
+        models = list_secret_ai_models()
+        if models:
+            print("Available Secret AI models:")
+            for i, model in enumerate(models, 1):
+                print(f"{i}. {model}")
+        else:
+            print("No Secret AI models available. Check your credentials.")
+    
+    elif args.secret_ai_command == "test-connection":
+        # Test connection to Secret AI
+        if not utils.check_secret_ai_credentials():
+            print("Error: Secret AI API key not found. Set the CLAIVE_AI_API_KEY environment variable.")
+            return
+            
+        model = SecretAIModel()
+        model_info = model.get_model_info()
+        
+        if not model_info["current_model"]:
+            print("Error: Could not connect to Secret AI. Check your credentials.")
+        else:
+            print(f"Connected to Secret AI successfully.")
+            print(f"Current model: {model_info['current_model']}")
+            print(f"Available models: {', '.join(model_info['available_models'])}")
+    
+    elif args.secret_ai_command == "chat":
+        # Chat with Secret AI
+        if not utils.check_secret_ai_credentials():
+            print("Error: Secret AI API key not found. Set the CLAIVE_AI_API_KEY environment variable.")
+            return
+            
+        message = " ".join(args.message)
+        model = SecretAIModel()
+        response = model.send_request(message)
+        print("\nSecret AI response:")
+        print(response)
+    
+    else:
+        print("Invalid Secret AI command. Use --help to see available commands.")
+
+def handle_web3_commands(args):
+    """Handle Web3 development commands"""
+    import codeforgeai.utils as utils
+    from codeforgeai.integrations.secret-ai-sdk.web3_commands import (
+        scaffold_web3_project, 
+        analyze_smart_contract,
+        estimate_gas_costs,
+        generate_web3_tests,
+        verify_contract_compatibility
+    )
+    
+    if args.web3_command == "scaffold":
+        # Scaffold a new web3 project
+        result = scaffold_web3_project(
+            project_name=args.project_name,
+            project_type=args.type,
+            output_dir=args.output
+        )
+        print(result)
+    
+    elif args.web3_command == "analyze-contract":
+        # Analyze a smart contract
+        result = analyze_smart_contract(args.contract_file)
+        print(utils.format_smart_contract_analysis(result))
+    
+    elif args.web3_command == "estimate-gas":
+        # Estimate gas costs for a smart contract
+        result = estimate_gas_costs(args.contract_file)
+        print(result)
+    
+    elif args.web3_command == "generate-tests":
+        # Generate tests for a smart contract
+        tests = generate_web3_tests(args.contract_file)
+        
+        if "error" in tests:
+            print(f"Error: {tests['error']}")
+            return
+            
+        output_dir = args.output or os.path.dirname(args.contract_file) or os.getcwd()
+        tests_dir = os.path.join(output_dir, "tests")
+        os.makedirs(tests_dir, exist_ok=True)
+        
+        for test_file, content in tests.items():
+            file_path = os.path.join(tests_dir, os.path.basename(test_file))
+            with open(file_path, "w") as f:
+                f.write(content)
+            print(f"Generated test file: {file_path}")
+    
+    elif args.web3_command == "check-env":
+        # Check web3 development environment
+        env_status = utils.check_web3_dev_environment()
+        print("Web3 Development Environment:")
+        for tool, status in env_status.items():
+            print(f"- {tool}: {status}")
+    
+    elif args.web3_command == "install-deps":
+        # Install web3 dependencies
+        install_type = "full" if args.full else "minimal"
+        result = utils.install_web3_dependencies(install_type)
+        print(result)
+    
+    else:
+        print("Invalid web3 command. Use --help to see available commands.")
 
 if __name__ == "__main__":
     main()
