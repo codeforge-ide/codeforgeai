@@ -55,3 +55,5 @@ MANIFEST
 
 .env
 .codeforge/
+
+hacksecret/
