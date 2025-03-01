@@ -1,103 +1,314 @@
-# CodeforgeAI 🚀🤖
+# 🔧 CodeforgeAI
 
-Welcome to **CodeforgeAI** – your ultimate, emoji-powered coding assistant! 🎉 Whether you're refining commit messages, analyzing your project, or editing code on the fly, CodeforgeAI has you covered. 
+![CodeforgeAI](https://img.shields.io/badge/CodeforgeAI-v0.1.0-blue)
+![Python](https://img.shields.io/badge/Python-3.8%2B-green)
+![License](https://img.shields.io/badge/License-MIT-orange)
 
-## Features ✨
-- **Prompt Processing:** Transform natural language prompts into precise code edits. 💡
-- **Code Analysis:** Get detailed insights and explanations for your code. 🕵️‍♂️
-- **Automatic Edits:** Quickly apply AI-driven modifications across your codebase. 🛠️
-- **Commit Messages:** Generate concise commit messages paired with expressive gitmojis. 🎯
-- **Modular & Extensible:** Easily integrate and customize to fit your workflow. 🔌
+## 🚀 Overview
 
-## Quick Start 🔥
-1. **Install:**  
-   Run `pip install .` or `pip install -e .` for editable mode.
-2. **Configure:**  
-   Update your `~/.codeforgeai.json` with custom prompts and settings. 📝
-3. **Run:**  
-   Execute the tool with commands like `analyze`, `prompt`, `edit`, or `commit-message`.
+CodeforgeAI is a powerful command-line tool that leverages AI to assist developers in their workflow. With a variety of commands and integration capabilities, it helps you analyze, generate, and improve code efficiently.
 
-## Detailed Usage
+## 📋 Table of Contents
 
-### 1. Installation
-- Run `pip install .` or `pip install -e .` after cloning the repository.
-- Ensure you have a proper Python environment set up.
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Commands Overview](#-commands-overview)
+- [Core Features](#-core-features)
+- [AI Models & Integration](#-ai-models--integration)
+- [Web3 Development Tools](#-web3-development-tools)
+- [Advanced Usage](#-advanced-usage)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-### 2. Configuration
-- The configuration file is located at `~/.codeforgeai.json`.
-- Edit this file to update prompts, model names, and other settings. Example:
-```
-{
-  "prompts": {
-    "commit_message": "Generate a commit message for the following changes:",
-    "code_edit": "Refactor the following code for clarity:"
-  },
-  "model": "gpt-3.5-turbo"
-}
-```
+## 🔌 Installation
 
-### 3. CLI Commands
+### Prerequisites
 
-#### Generate a Commit Message
-```sh
-codeforgeai commit-message
+- Python 3.8 or higher
+- Git
+- Ollama (for local AI models)
+
+### Step-by-Step Installation
+
+1. **Clone the repository:**
+
+```bash
+git clone https://github.com/codeforge-ide/codeforgeai.git
+cd codeforgeai
 ```
 
-#### Edit Code in a File
-```sh
-codeforgeai edit my_script.py --user_prompt "Refactor for clarity"
+2. **Install the package in development mode:**
+
+```bash
+pip install -e .
 ```
 
-#### Analyze Your Directory
-```sh
+This command installs the package in "editable" mode, which means changes to the source code will be immediately reflected without needing to reinstall.
+
+3. **Verify installation:**
+
+```bash
+codeforgeai --help
+```
+
+You should see the help message with available commands.
+
+## ⚙️ Configuration
+
+CodeforgeAI uses a configuration file stored at `~/.codeforgeai.json`. The first time you run a command, this file will be created with default settings.
+
+### View Current Configuration
+
+```bash
+codeforgeai config
+```
+
+### Key Configuration Options
+
+- `general_model`: The AI model for general prompts (default: "tinyllama")
+- `code_model`: The AI model for code-specific tasks (default: "qwen2.5-coder:0.5b")
+- `format_line_separator`: Number of newlines between extracted code blocks (default: 5)
+
+You can manually edit the config file to customize these settings.
+
+## 📜 Commands Overview
+
+CodeforgeAI offers a rich set of commands for various development tasks:
+
+### Basic Commands
+
+| Command | Description |
+|---------|-------------|
+| `analyze` | Analyze the current working directory |
+| `prompt` | Process a user prompt with AI |
+| `config` | Run configuration checkup |
+| `strip` | Print tree structure after removing gitignored files |
+| `explain` | Explain code in a given file |
+| `edit` | Edit code in specified files or folders |
+| `extract` | Extract code blocks from file or string |
+| `format` | Format code blocks for readability |
+| `command` | Process a command request |
+| `suggestion` | Get quick code suggestions |
+| `commit-message` | Generate a commit message with gitmoji |
+
+### Secret AI Integration
+
+| Command | Description |
+|---------|-------------|
+| `secret-ai list-models` | List available Secret AI models |
+| `secret-ai test-connection` | Test Secret AI connection |
+| `secret-ai chat` | Chat with Secret AI |
+
+### Web3 Development
+
+| Command | Description |
+|---------|-------------|
+| `web3 scaffold` | Scaffold a new web3 project |
+| `web3 analyze-contract` | Analyze a smart contract |
+| `web3 estimate-gas` | Estimate gas costs for a smart contract |
+| `web3 generate-tests` | Generate tests for a smart contract |
+| `web3 check-env` | Check web3 development environment |
+| `web3 install-deps` | Install web3 dependencies |
+
+## 🔍 Core Features
+
+### 🔄 Project Analysis
+
+Analyze your entire project structure and understand its composition:
+
+```bash
+codeforgeai analyze
+```
+
+This will examine your project and create a `.codeforge.json` file with metadata about your codebase.
+
+For continuous monitoring, use:
+
+```bash
 codeforgeai analyze --loop
 ```
 
-## Usage Examples 🤩
-- **Generate a Commit Message:**  
-  ```sh
-  codeforgeai commit-message
-  ```
-- **Edit Code in a File:**  
-  ```sh
-  codeforgeai edit my_script.py --user_prompt "Refactor for clarity"
-  ```
-- **Analyze Your Directory:**  
-  ```sh
-  codeforgeai analyze --loop
-  ```
+### 💬 AI Prompting
 
-## Project Structure 📁
-- **src/codeforgeai/**: Core engine, models, and CLI logic.
-- **config**: JSON-based configuration for prompt tuning.
-- **Utilities**: Modules to handle file management and directory analysis.
+Get AI assistance for coding tasks:
 
-## Contributing 💖
-We welcome your contributions!  
-- Fork the repository.
-- Create a feature branch.
-- Commit with witty, emoji-laden messages.
-- Open a pull request – let’s code together! 🤝
+```bash
+codeforgeai prompt "Create a function to calculate Fibonacci numbers"
+```
 
-## License 📜
-This project is MIT licensed. Enjoy, share, and innovate with CodeforgeAI! 🆓
+### 📝 Code Explanation
 
----
+Get explanations for code in a file:
 
-Thank you for choosing CodeforgeAI – where creativity meets code. Happy coding! 🎊💫
+```bash
+codeforgeai explain path/to/file.py
+```
 
-## Troubleshooting 🛠️
-- Ensure your configuration file at `~/.codeforgeai.json` is properly set up.
-- If the commit-message subcommand returns "No changes found" unexpectedly, verify that there are staged, tracked, or untracked changes.
-- Check your internet connectivity if AI model requests fail.
-- Review the logs (if running in debug mode) for detailed error messages.
+### ✏️ Code Editing
 
-## FAQ ❓
-- **Q:** How do I update the configuration?  
-  **A:** Edit the `~/.codeforgeai.json` file to customize prompts and model settings.
-- **Q:** Which models are used for AI tasks?  
-  **A:** `general_model` is used for prompt rephrasing and initial processing, while `code_model` handles code-specific requests (e.g., commit messages, explanations).
-- **Q:** How can I contribute to CodeforgeAI?  
-  **A:** Fork the repository, make improvements, and submit a pull request with a clear commit message.
-- **Q:** Where can I find more documentation?  
-  **A:** Additional usage details can be found in the repository’s wiki and inline code documentation.
+Edit files according to a prompt:
+
+```bash
+codeforgeai edit src/ --user_prompt "Add error handling to all functions"
+```
+
+To include directories that might be gitignored:
+
+```bash
+codeforgeai edit build/ --user_prompt "Fix deprecated API calls" --allow-ignore
+```
+
+### 💡 Code Suggestions
+
+Get quick code suggestions:
+
+```bash
+# For a specific line in a file
+codeforgeai suggestion --file app.py --line 42
+
+# For the entire file
+codeforgeai suggestion --file app.py --entire
+
+# For a code snippet
+codeforgeai suggestion --string "def factorial(n):"
+```
+
+### 📊 Git Integration
+
+Generate commit messages automatically:
+
+```bash
+codeforgeai commit-message
+```
+
+## 🧠 AI Models & Integration
+
+CodeforgeAI works with various AI models:
+
+### Local Models (via Ollama)
+
+By default, CodeforgeAI uses local models through Ollama:
+- `tinyllama` for general prompts
+- `qwen2.5-coder:0.5b` for code-specific tasks
+
+### Secret AI SDK Integration
+
+For advanced capabilities, CodeforgeAI integrates with Secret AI:
+
+```bash
+# Set your API key
+export CLAIVE_AI_API_KEY=your_api_key_here
+
+# Test connection
+codeforgeai secret-ai test-connection
+
+# List available models
+codeforgeai secret-ai list-models
+
+# Chat with Secret AI
+codeforgeai secret-ai chat "How do I implement WebSockets in Node.js?"
+```
+
+## ⛓️ Web3 Development Tools
+
+CodeforgeAI includes specialized tools for Web3 development:
+
+### Scaffold Projects
+
+```bash
+# Create a basic dApp
+codeforgeai web3 scaffold my-dapp
+
+# Create an NFT project
+codeforgeai web3 scaffold my-nft --type nft
+
+# Create a token project in a specific directory
+codeforgeai web3 scaffold my-token --type token --output ~/projects
+```
+
+### Smart Contract Analysis
+
+```bash
+codeforgeai web3 analyze-contract contracts/Token.sol
+```
+
+### Gas Estimation
+
+```bash
+codeforgeai web3 estimate-gas contracts/Token.sol
+```
+
+### Test Generation
+
+```bash
+codeforgeai web3 generate-tests contracts/Token.sol --output tests/
+```
+
+### Environment Check
+
+```bash
+codeforgeai web3 check-env
+```
+
+### Install Dependencies
+
+```bash
+# Minimal dependencies
+codeforgeai web3 install-deps
+
+# Full development environment
+codeforgeai web3 install-deps --full
+```
+
+## 🔄 Advanced Usage
+
+### Command Processing
+
+Determine if a request should be handled as code or terminal commands:
+
+```bash
+codeforgeai command "set up a React project with TypeScript"
+```
+
+### Code Format Processing
+
+Extract code blocks from files or strings:
+
+```bash
+codeforgeai extract --file response.md
+```
+
+Format code blocks for better readability:
+
+```bash
+codeforgeai format --file extracted_code.txt
+```
+
+### Directory Structure Analysis
+
+View your project structure without gitignored files:
+
+```bash
+codeforgeai strip
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgements
+
+- Thanks to all contributors and users of CodeforgeAI
+- [Ollama](https://github.com/ollama/ollama) for local AI model support
+- [Secret AI SDK](https://claive.io) for advanced AI capabilities
+- The open-source community for inspiration and tools
