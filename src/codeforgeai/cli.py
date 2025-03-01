@@ -84,12 +84,16 @@ def main():
 
 def handle_secret_ai_commands(args):
     """Handle Secret AI SDK integration commands"""
-    # Import inside function to avoid circular imports
     import codeforgeai.utils as utils
-    from codeforgeai.integrations.secret-ai-sdk.secret_ai_integration import SecretAIModel, list_secret_ai_models
+    
+    # Import inside function to avoid circular imports
+    try:
+        from codeforgeai.integrations.secret_ai.secret_ai_integration import SecretAIModel, list_secret_ai_models
+    except ImportError:
+        print("Error: Secret AI SDK integration not available. Install required packages.")
+        return
     
     if args.secret_ai_command == "list-models":
-        # List available models
         models = list_secret_ai_models()
         if models:
             print("Available Secret AI models:")
@@ -99,7 +103,6 @@ def handle_secret_ai_commands(args):
             print("No Secret AI models available. Check your credentials.")
     
     elif args.secret_ai_command == "test-connection":
-        # Test connection to Secret AI
         if not utils.check_secret_ai_credentials():
             print("Error: Secret AI API key not found. Set the CLAIVE_AI_API_KEY environment variable.")
             return
@@ -115,7 +118,6 @@ def handle_secret_ai_commands(args):
             print(f"Available models: {', '.join(model_info['available_models'])}")
     
     elif args.secret_ai_command == "chat":
-        # Chat with Secret AI
         if not utils.check_secret_ai_credentials():
             print("Error: Secret AI API key not found. Set the CLAIVE_AI_API_KEY environment variable.")
             return
@@ -132,16 +134,20 @@ def handle_secret_ai_commands(args):
 def handle_web3_commands(args):
     """Handle Web3 development commands"""
     import codeforgeai.utils as utils
-    from codeforgeai.integrations.secret-ai-sdk.web3_commands import (
-        scaffold_web3_project, 
-        analyze_smart_contract,
-        estimate_gas_costs,
-        generate_web3_tests,
-        verify_contract_compatibility
-    )
+    
+    # Import inside function to avoid circular imports
+    try:
+        from codeforgeai.integrations.secret_ai.web3_commands import (
+            scaffold_web3_project, 
+            analyze_smart_contract,
+            estimate_gas_costs,
+            generate_web3_tests
+        )
+    except ImportError:
+        print("Error: Web3 integration not available. Install required packages.")
+        return
     
     if args.web3_command == "scaffold":
-        # Scaffold a new web3 project
         result = scaffold_web3_project(
             project_name=args.project_name,
             project_type=args.type,
@@ -150,17 +156,14 @@ def handle_web3_commands(args):
         print(result)
     
     elif args.web3_command == "analyze-contract":
-        # Analyze a smart contract
         result = analyze_smart_contract(args.contract_file)
         print(utils.format_smart_contract_analysis(result))
     
     elif args.web3_command == "estimate-gas":
-        # Estimate gas costs for a smart contract
         result = estimate_gas_costs(args.contract_file)
         print(result)
     
     elif args.web3_command == "generate-tests":
-        # Generate tests for a smart contract
         tests = generate_web3_tests(args.contract_file)
         
         if "error" in tests:
@@ -178,17 +181,10 @@ def handle_web3_commands(args):
             print(f"Generated test file: {file_path}")
     
     elif args.web3_command == "check-env":
-        # Check web3 development environment
         env_status = utils.check_web3_dev_environment()
         print("Web3 Development Environment:")
         for tool, status in env_status.items():
             print(f"- {tool}: {status}")
-    
-    elif args.web3_command == "install-deps":
-        # Install web3 dependencies
-        install_type = "full" if args.full else "minimal"
-        result = utils.install_web3_dependencies(install_type)
-        print(result)
     
     else:
         print("Invalid web3 command. Use --help to see available commands.")

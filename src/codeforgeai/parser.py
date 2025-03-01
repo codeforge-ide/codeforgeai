@@ -27,13 +27,9 @@ def parse_cli(args):
     secret_ai_parser = subparsers.add_parser("secret-ai", help="Secret AI SDK integration commands")
     secret_ai_subparsers = secret_ai_parser.add_subparsers(dest="secret_ai_command", help="Secret AI commands")
     
-    # Secret AI - list models
+    # Secret AI subcommands
     secret_ai_subparsers.add_parser("list-models", help="List available Secret AI models")
-    
-    # Secret AI - test connection
     secret_ai_subparsers.add_parser("test-connection", help="Test Secret AI connection")
-    
-    # Secret AI - chat
     secret_ai_chat_parser = secret_ai_subparsers.add_parser("chat", help="Chat with Secret AI")
     secret_ai_chat_parser.add_argument("message", nargs="+", help="Chat message")
     
@@ -41,27 +37,22 @@ def parse_cli(args):
     web3_parser = subparsers.add_parser("web3", help="Web3 development commands")
     web3_subparsers = web3_parser.add_subparsers(dest="web3_command", help="Web3 commands")
     
-    # Web3 - scaffold project
-    web3_scaffold_parser = web3_subparsers.add_parser("scaffold", help="Scaffold a new web3 project")
-    web3_scaffold_parser.add_argument("project_name", help="Name of the project")
-    web3_scaffold_parser.add_argument("--type", choices=["dapp", "smart-contract", "token", "nft"], 
-                                    default="dapp", help="Project type")
-    web3_scaffold_parser.add_argument("--output", help="Output directory")
+    # Web3 subcommands
+    scaffold_parser = web3_subparsers.add_parser("scaffold", help="Scaffold a new web3 project")
+    scaffold_parser.add_argument("project_name", help="Name of the project")
+    scaffold_parser.add_argument("--type", choices=["dapp", "smart-contract", "token", "nft"], default="dapp", help="Project type")
+    scaffold_parser.add_argument("--output", help="Output directory")
     
-    # Web3 - analyze contract
-    web3_analyze_parser = web3_subparsers.add_parser("analyze-contract", help="Analyze a smart contract")
-    web3_analyze_parser.add_argument("contract_file", help="Path to the smart contract")
+    analyze_contract_parser = web3_subparsers.add_parser("analyze-contract", help="Analyze a smart contract")
+    analyze_contract_parser.add_argument("contract_file", help="Path to the smart contract")
     
-    # Web3 - estimate gas
-    web3_gas_parser = web3_subparsers.add_parser("estimate-gas", help="Estimate gas costs for a smart contract")
-    web3_gas_parser.add_argument("contract_file", help="Path to the smart contract")
+    gas_parser = web3_subparsers.add_parser("estimate-gas", help="Estimate gas costs for a smart contract")
+    gas_parser.add_argument("contract_file", help="Path to the smart contract")
     
-    # Web3 - generate tests
-    web3_tests_parser = web3_subparsers.add_parser("generate-tests", help="Generate tests for a smart contract")
-    web3_tests_parser.add_argument("contract_file", help="Path to the smart contract")
-    web3_tests_parser.add_argument("--output", help="Output directory for tests")
+    tests_parser = web3_subparsers.add_parser("generate-tests", help="Generate tests for a smart contract")
+    tests_parser.add_argument("contract_file", help="Path to the smart contract")
+    tests_parser.add_argument("--output", help="Output directory for tests")
     
-    # Web3 - check environment
     web3_subparsers.add_parser("check-env", help="Check web3 development environment")
     
     # Web3 - install dependencies

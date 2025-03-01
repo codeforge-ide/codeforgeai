@@ -34,12 +34,6 @@ def format_smart_contract_analysis(analysis_text):
         if re.search(pattern, formatted):
             formatted = re.sub(pattern, f"\n\n## {section}\n", formatted)
     
-    # Add code highlighting
-    code_blocks = re.findall(r'```(\w*)\n(.*?)```', formatted, re.DOTALL)
-    for lang, code in code_blocks:
-        highlighted = f"```{lang}\n{code}```"
-        formatted = formatted.replace(f"```{lang}\n{code}```", highlighted)
-    
     return formatted
 
 def check_web3_dev_environment():
