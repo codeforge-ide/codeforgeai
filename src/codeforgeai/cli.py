@@ -26,6 +26,26 @@ def parse_cli(args):
     subparsers.add_parser("strip", help="Print tree structure after removing gitignored files")
     subparsers.add_parser("commit-message", help="Generate commit message with gitmoji")
     
+    # Add Vyper subcommand
+    vyper_parser = subparsers.add_parser("vyper", help="Work with Vyper smart contracts")
+    vyper_subparsers = vyper_parser.add_subparsers(dest="vyper_command", help="Available Vyper commands")
+    
+    # Compile command
+    compile_parser = vyper_subparsers.add_parser("compile", help="Compile a Vyper smart contract")
+    compile_parser.add_argument("file_path", help="Path to the Vyper contract file")
+    compile_parser.add_argument("-f", "--format", choices=["abi", "bytecode", "bytecode_runtime", "ir", "asm", "source_map", "method_identifiers"], 
+                               default="abi", help="Output format (default: abi)")
+    compile_parser.add_argument("--optimize", choices=["none", "gas", "codesize"], 
+                               help="Optimization mode: none, gas, or codesize")
+    compile_parser.add_argument("--evm-version", help="Target EVM version")
+    
+    # Analyze command
+    analyze_parser = vyper_subparsers.add_parser("analyze", help="Analyze a Vyper smart contract")
+    analyze_parser.add_argument("file_path", help="Path to the Vyper contract file")
+    
+    # Check command
+    vyper_subparsers.add_parser("check", help="Check if Vyper is installed")
+    
     parser.add_argument("-v", "--verbose", dest="loglevel", help="set loglevel to INFO",
                         action="store_const", const=logging.INFO)
     parser.add_argument("-vv", "--very-verbose", dest="loglevel", help="set loglevel to DEBUG",
@@ -79,6 +99,11 @@ def main():
     # NEW: Handle Web3 commands
     elif args.command == "web3":
         handle_web3_commands(args)
+    
+    # Handle Vyper commands
+    elif args.command == "vyper":
+        handle_vyper_commands(args)
+    
     else:
         print("No valid command provided. Run with --help for available commands.")
 
@@ -188,6 +213,54 @@ def handle_web3_commands(args):
     
     else:
         print("Invalid web3 command. Use --help to see available commands.")
+
+def handle_vyper_commands(args):
+    """Handle Vyper smart contract development commands"""
+    
+    try:
+        from codeforgeai.integrations.vyper import compile_contract, check_vyper_installed, analyze_contract
+    except ImportError:
+        print("Error: Vyper integration not available. Check if the module is properly installed.")
+        return
+    
+    if args.vyper_command == "compile":
+        result = compile_contract(args.file_path, args.format, args.optimize, args.evm_version)
+        
+        if "error" in result:
+            print(f"Error: {result['error']}")
+            return
+            
+        print(f"Contract compiled successfully!")
+        if isinstance(result["output"], dict):
+            print(json.dumps(result["output"], indent=2))
+        else:
+            print(result["output"])
+            
+    elif args.vyper_command == "analyze":
+        result = analyze_contract(args.file_path)
+        
+        if "error" in result:
+            print(f"Error: {result['error']}")
+            return
+            
+        print(f"Analysis of {os.path.basename(args.file_path)}:")
+        print(f"Contract Type: {result.get('contract_type', 'Unknown')}")
+        print("\nFeatures detected:")
+        for feature, present in result.get('features', {}).items():
+            status = "✓" if present else "✗"
+            print(f"  {status} {feature.replace('_', ' ').replace('has ', '')}")
+    
+    elif args.vyper_command == "check":
+        result = check_vyper_installed()
+        
+        if result["installed"]:
+            print(f"Vyper is installed. Version: {result['version']}")
+        else:
+            print("Vyper is not installed or not in the PATH.")
+            print("To install Vyper, follow the instructions at: https://docs.vyperlang.org/en/latest/installing-vyper.html")
+    
+    else:
+        print("Invalid Vyper command. Use --help to see available commands.")
 
 if __name__ == "__main__":
     main()

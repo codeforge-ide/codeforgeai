@@ -16,6 +16,7 @@ CodeforgeAI is a powerful command-line tool that leverages AI to assist develope
 - [Core Features](#-core-features)
 - [AI Models & Integration](#-ai-models--integration)
 - [Web3 Development Tools](#-web3-development-tools)
+- [Vyper Smart Contract Development](#-vyper-smart-contract-development)
 - [Advanced Usage](#-advanced-usage)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -109,6 +110,14 @@ CodeforgeAI offers a rich set of commands for various development tasks:
 | `web3 generate-tests` | Generate tests for a smart contract |
 | `web3 check-env` | Check web3 development environment |
 | `web3 install-deps` | Install web3 dependencies |
+
+### Vyper Smart Contracts
+
+| Command | Description |
+|---------|-------------|
+| `vyper compile` | Compile a Vyper smart contract |
+| `vyper analyze` | Analyze a Vyper smart contract |
+| `vyper check` | Check if Vyper is installed |
 
 ## 🔍 Core Features
 
@@ -259,6 +268,59 @@ codeforgeai web3 install-deps
 # Full development environment
 codeforgeai web3 install-deps --full
 ```
+
+## 🐍 Vyper Smart Contract Development
+
+CodeforgeAI includes specialized tools for building smart contracts using the Vyper language:
+
+### Check Vyper Installation
+
+Check if the Vyper compiler is installed on your system:
+
+```bash
+codeforgeai vyper check
+```
+
+### Compile Vyper Contracts
+
+Compile a Vyper smart contract:
+
+```bash
+# Basic compilation (outputs ABI by default)
+codeforgeai vyper compile contracts/SimpleAuction.vy
+
+# Compile to get bytecode
+codeforgeai vyper compile contracts/SimpleAuction.vy -f bytecode
+
+# Compile with optimization for gas efficiency
+codeforgeai vyper compile contracts/SimpleAuction.vy --optimize gas
+
+# Compile for specific EVM version
+codeforgeai vyper compile contracts/SimpleAuction.vy --evm-version paris
+```
+
+### Analyze Vyper Contracts
+
+Analyze a Vyper contract for features and patterns:
+
+```bash
+codeforgeai vyper analyze contracts/SimpleAuction.vy
+```
+
+This will detect common contract types like auctions, tokens, voting systems, and crowdfunding contracts based on the code patterns found in the examples.
+
+### Vyper Contract Examples
+
+The tool comes with several example Vyper contracts demonstrating common patterns:
+
+- Simple open auction
+- Blind auction
+- Safe remote purchases
+- Crowdfunding
+- Voting systems
+- Company stock management
+
+These examples show Vyper's focus on security and simplicity in smart contract development.
 
 ## 🔄 Advanced Usage
 
