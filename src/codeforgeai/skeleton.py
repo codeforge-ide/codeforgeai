@@ -251,6 +251,25 @@ def parse_args(args):
     web3_deps_parser = web3_subparsers.add_parser("install-deps", help="Install web3 dependencies")
     web3_deps_parser.add_argument("--full", action="store_true", help="Install full set of dependencies")
 
+    # NEW: ZerePy integration subcommands
+    zerepy_parser = subparsers.add_parser("zerepy", help="ZerePy integration commands")
+    zerepy_subparsers = zerepy_parser.add_subparsers(dest="zerepy_command", help="ZerePy commands")
+    
+    # ZerePy subcommands
+    zerepy_subparsers.add_parser("status", help="Check ZerePy server status")
+    zerepy_subparsers.add_parser("list-agents", help="List available ZerePy agents")
+    
+    zerepy_load_parser = zerepy_subparsers.add_parser("load-agent", help="Load a ZerePy agent")
+    zerepy_load_parser.add_argument("agent_name", help="Name of the agent to load")
+    
+    zerepy_action_parser = zerepy_subparsers.add_parser("action", help="Execute a ZerePy action")
+    zerepy_action_parser.add_argument("connection", help="Connection name")
+    zerepy_action_parser.add_argument("action", help="Action name")
+    zerepy_action_parser.add_argument("--params", help="Action parameters in JSON format")
+    
+    zerepy_chat_parser = zerepy_subparsers.add_parser("chat", help="Chat with a ZerePy agent")
+    zerepy_chat_parser.add_argument("message", nargs="+", help="Chat message")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -505,6 +524,10 @@ def main(args):
     # NEW: Handle Web3 commands
     elif args.command == "web3":
         handle_web3_commands(args)
+    # NEW: Handle ZerePy commands
+    elif args.command == "zerepy":
+        handle_zerepy_commands(args)
+        return
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
@@ -622,6 +645,60 @@ def handle_web3_commands(args):
     else:
         print("Invalid web3 command. Use 'codeforgeai web3 --help' to see available commands.")
 
+# Add handler function for ZerePy commands
+def handle_zerepy_commands(args):
+    """Handle ZerePy integration commands"""
+    import json
+    
+    # Import inside function to avoid circular imports
+    try:
+        from codeforgeai.integrations.zerepy.zerepy_integration import ZerePyClient, is_zerepy_available
+    except ImportError:
+        print("Error: ZerePy integration not available. Install required packages.")
+        return
+    
+    if not is_zerepy_available():
+        print("Error: ZerePy server is not available. Make sure it's running.")
+        return
+        
+    client = ZerePyClient()
+    
+    if args.zerepy_command == "status":
+        status = client.server_status()
+        print("ZerePy Server Status:")
+        print(json.dumps(status, indent=2))
+        
+    elif args.zerepy_command == "list-agents":
+        agents = client.list_agents()
+        print("Available ZerePy Agents:")
+        for i, agent in enumerate(agents, 1):
+            print(f"{i}. {agent}")
+            
+    elif args.zerepy_command == "load-agent":
+        response = client.load_agent(args.agent_name)
+        print(f"Load agent response: {json.dumps(response, indent=2)}")
+        
+    elif args.zerepy_command == "action":
+        params = {}
+        if args.params:
+            try:
+                params = json.loads(args.params)
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON format for parameters")
+                return
+                
+        result = client.perform_action(args.connection, args.action, params)
+        print("Action result:")
+        print(json.dumps(result, indent=2))
+        
+    elif args.zerepy_command == "chat":
+        message = " ".join(args.message)
+        response = client.chat(message)
+        print("\nZerePy Agent Response:")
+        print(response)
+    
+    else:
+        print("Invalid ZerePy command. Use 'codeforgeai zerepy --help' to see available commands.")
 
 def run():
     """Calls :func:`main` passing the CLI arguments extracted from :obj:`sys.argv`

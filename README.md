@@ -20,6 +20,7 @@ CodeforgeAI is a powerful command-line tool that leverages AI to assist develope
 - [Advanced Usage](#-advanced-usage)
 - [Contributing](#-contributing)
 - [License](#-license)
+- [Integrations](#-integrations)
 
 ## 🔌 Installation
 
@@ -374,3 +375,45 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Ollama](https://github.com/ollama/ollama) for local AI model support
 - [Secret AI SDK](https://docs.scrt.network/secret-network-documentation/claive-ai/introduction) for advanced AI capabilities
 - The open-source community for inspiration and tools
+
+## Integrations
+
+### ZerePy Integration
+
+CodeForgeAI includes a lightweight integration with ZerePy, allowing you to interact with ZerePy agents and services directly from your CodeForgeAI workflows.
+
+With this integration, you can:
+
+- Connect to ZerePy servers
+- List and load ZerePy agents
+- Execute agent actions
+- Interact with ZerePy connections (Twitter, OpenAI, Ethereum, etc.)
+- Send chat messages to agents
+
+To use the ZerePy integration:
+
+```python
+from codeforgeai.integrations.zerepy.zerepy_integration import ZerePyClient
+
+# Initialize client
+client = ZerePyClient()
+
+# List available agents
+agents = client.list_agents()
+
+# Load an agent
+client.load_agent("example")
+
+# Execute an action
+client.perform_action(
+    connection="openai",
+    action="generate-text",
+    params={
+        "prompt": "Write documentation for my code",
+        "system_prompt": "You are a technical writer",
+        "model": "gpt-4"
+    }
+)
+```
+
+For more details, see the [ZerePy integration documentation](src/codeforgeai/integrations/zerepy/README.md).
