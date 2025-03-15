@@ -10,6 +10,8 @@ from codeforgeai.models.general_model import GeneralModel
 from codeforgeai.models.code_model import CodeModel
 from codeforgeai.file_manager import apply_changes
 
+
+# define engine class.
 class Engine:
     def __init__(self):
         # Use the config file from the user's home directory
@@ -20,6 +22,7 @@ class Engine:
     def _refresh_config(self):
         """Reload config from file to ensure we have the latest values"""
         try:
+            from codeforgeai.config import load_config  # Ensure load_config is defined locally
             self.config = load_config(self.config_path)
             # Reinitialize models with fresh config values
             self.general_model = GeneralModel(self.config.get("general_model", "ollama_general"))  # Provide default

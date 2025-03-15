@@ -1,6 +1,7 @@
 import logging
 from ollama import chat, ChatResponse
 import os
+from codeforgeai.config import load_config  # Add this import statement
 
 class CodeModel:
     def __init__(self, model_name="ollama_code"):
