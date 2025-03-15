@@ -39,13 +39,13 @@ __license__ = "MIT"
 
 _logger = logging.getLogger(__name__)
 
-# Load configuration
-config_path = os.path.expanduser("~/.codeforgeai.json")
-config = load_config(config_path)
-
-# Initialize models with configuration values
-general_model = GeneralModel(config.get("general_model"))
-code_model = CodeModel(config.get("code_model"))
+# Define a function to get models based on current config
+def get_models():
+    config_path = os.path.expanduser("~/.codeforgeai.json")
+    config = load_config(config_path)
+    general_model = GeneralModel(config.get("general_model"))
+    code_model = CodeModel(config.get("code_model"))
+    return general_model, code_model, config
 
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
@@ -88,11 +88,13 @@ def load_config(config_path):
     with open(config_path) as f:
         return json.load(f)
 
-def call_general_ai(prompt, config):
+def call_general_ai(prompt, config=None):
+    general_model, _, _ = get_models()
     response = general_model.send_request(prompt, config)
     return response
 
 def call_code_ai(prompt):
+    _, code_model, _ = get_models()
     response = code_model.send_request(prompt)
     return response
 
@@ -296,11 +298,17 @@ def setup_logging(loglevel):
 
 
 def main(args):
-    global config  # add this line to use the module-level config variable
+    """Parse command line arguments and execute commands."""
+    # Define config_path before parsing to ensure it's available for all code paths
+    config_path = os.path.expanduser("~/.codeforgeai.json")
+    
     args = parse_args(args)
     loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
     setup_logging(loglevel)
     _logger.debug("Starting CodeforgeAI...")
+
+    # Get fresh config for all operations
+    _, _, config = get_models()
 
     if args.command == "config":
         from codeforgeai.config import ensure_config_prompts

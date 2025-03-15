@@ -33,8 +33,31 @@ def create_default_config(config_path):
     return default_config
 
 def load_config(config_path):
-    default_config = {
+    """Load config from file or create with defaults if not exists"""
+    config_path = os.path.expanduser(config_path)
+    if not os.path.exists(config_path):
+        # Create basic structure
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        basic_config = {"general_model": "tinyllama", "code_model": "qwen2.5-coder:0.5b"}
+        with open(config_path, "w") as f:
+            json.dump(basic_config, f, indent=4)
+        # Let ensure_config_prompts fill in the rest
+        return ensure_config_prompts(config_path)
+    
+    # File exists, load it
+    with open(config_path) as f:
+        return json.load(f)
 
+def ensure_config_prompts(config_path):
+    """Ensure that all necessary prompt keys exist in the config.
+    If a key is missing, append it with a default value.
+    """
+    # First load the current config (or create if not exists)
+    config = load_config(config_path)
+    
+    # Get the defaults that should be present
+    default_config = {
+        # Move all these defaults from the hardcoded load_config function to here
         "general_model": "tinyllama",
         "general_prompt": "based on the below prompt and without returning anything else, restructure it so that it is strictly understandable to a coding ai agent with json output for file changes:",
         "code_model": "qwen2.5-coder:0.5b",
@@ -53,41 +76,20 @@ def load_config(config_path):
         "language_classification_prompt": "in one word only, what programming language is used in this project tree structure",
         "readme_summary_prompt": "in one short sentence only, generate a concise summary of this text below, and nothing else",
         "specific_file_classification": "taking the path and content of this file and classify it into either only user code file or project code file or source control file",
-        "improve_code_prompt": "given this block of code, improve the code generally and return nothing but the improved code:"
-    
+        "improve_code_prompt": "given this block of code, improve the code generally and return nothing but the improved code:",
+        "explain_code_prompt": "explain the following code in a clear and concise manner"
     }
-    # Expand the user directory
-    config_path = os.path.expanduser(config_path)
-    if not os.path.exists(config_path):
-        return create_default_config(config_path)
-    with open(config_path) as f:
-        config = json.load(f)
+    
+    # Check if any defaults are missing and add them
     updated = False
     for key, value in default_config.items():
         if key not in config:
             config[key] = value
             updated = True
+    
+    # Write back if changes were made
     if updated:
         with open(config_path, "w") as f:
             json.dump(config, f, indent=4)
-    return config
-
-def ensure_config_prompts(config_path):
-    """Ensure that all necessary prompt keys exist in the config.
-    If a key is missing, append it with a default value.
-    """
-    additional_defaults = {
-        "language_classification_prompt": "in one word only, what programming language is used in this project tree structure",
-        "readme_summary_prompt": "in one short sentence only, generate a concise summary of this text below, and nothing else",
-        "specific_file_classification": "taking the path and content of this file and classify it into either only user code file or project code file or source control file"
-    }
-    config = load_config(config_path)
-    updated = False
-    for key, value in additional_defaults.items():
-        if key not in config:
-            config[key] = value
-            updated = True
-    if updated:
-        with open(config_path, "w") as f:
-            json.dump(config, f, indent=4)
+    
     return config

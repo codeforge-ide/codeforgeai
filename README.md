@@ -21,7 +21,6 @@ CodeforgeAI is a powerful command-line tool that leverages AI to assist develope
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Integrations](#-integrations)
-- [examples]
 
 ## 🔌 Installation
 
