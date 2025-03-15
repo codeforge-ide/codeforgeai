@@ -14,18 +14,28 @@ class Engine:
     def __init__(self):
         # Use the config file from the user's home directory
         self.config_path = os.path.expanduser("~/.codeforgeai.json")
+        # Always load fresh config directly from the file
+        self._refresh_config()
+        
+    def _refresh_config(self):
+        """Reload config from file to ensure we have the latest values"""
         self.config = load_config(self.config_path)
+        # Reinitialize models with fresh config values
         self.general_model = GeneralModel(self.config.get("general_model"))
         self.code_model = CodeModel(self.config.get("code_model"))
+        return self.config
 
     def run_analysis(self):
+        self._refresh_config()  # Refresh config before operation
         analyze_directory()
 
     def run_analysis_loop(self):
+        self._refresh_config()  # Refresh config before operation
         print("Starting adaptive feedback loop for directory analysis (Ctrl+C to stop).")
         loop_analyze_directory()
 
     def process_prompt(self, user_prompt):
+        self._refresh_config()  # Refresh config before operation
         raw_prompt = " ".join(user_prompt)
         finetune_catalyst = self.config.get(
             "prompt_finetune_prompt",
@@ -44,6 +54,7 @@ class Engine:
         return final_response
 
     def explain_code(self, file_path):
+        self._refresh_config()  # Refresh config before operation
         explain_prompt = self.config.get("explain_code_prompt", "explain the following code in a clear and concise manner")
         
         with open(file_path, "r") as file:
@@ -97,6 +108,7 @@ class Engine:
 
     def process_commit_message(self):
         """Quickly generate a one-sentence commit message with an emoji using only the general model."""
+        self._refresh_config()  # Refresh config before operation
         try:
             diff = subprocess.check_output(
                 ["git", "diff", "--name-status", "--cached"],

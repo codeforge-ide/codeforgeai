@@ -104,6 +104,8 @@ def execute_changes(changes):
     # Placeholder: process JSON output and update files accordingly
 
 def process_prompt(user_prompt):
+    # Get fresh config each time the function is called
+    _, _, config = get_models()
     combined_prompt = " ".join(user_prompt)
     
     # Finetune the prompt using the general AI model.
@@ -117,6 +119,8 @@ def process_prompt(user_prompt):
     print(final_response)
 
 def explain_code(file_path):
+    # Get fresh config each time the function is called
+    _, _, config = get_models()
     explain_prompt = config.get("explain_code_prompt", "explain the following code in a clear and concise manner")
     
     with open(file_path, "r") as file:
@@ -307,7 +311,17 @@ def main(args):
     setup_logging(loglevel)
     _logger.debug("Starting CodeforgeAI...")
 
-    # Get fresh config for all operations
+    # Load fresh config directly from file - don't use cached values
+    if args.command == "config":
+        from codeforgeai.config import ensure_config_prompts
+        # Ensure we're loading directly from the file, not from any cached values
+        os.environ["CODEFORGEAI_RELOAD_CONFIG"] = "1"
+        config = ensure_config_prompts(config_path)
+        print("Configuration checkup complete. Current configuration:")
+        print(json.dumps(config, indent=4))
+        return
+    
+    # Get fresh config for all operations - don't use cached values
     _, _, config = get_models()
 
     if args.command == "config":
