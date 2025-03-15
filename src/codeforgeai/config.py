@@ -36,40 +36,27 @@ def create_default_config(config_path):
 
 def load_config(config_path):
     """Load configuration from file, always reading the file directly to ensure latest values"""
-    global _config_cache
-    
     # Always expand user path
     expanded_path = os.path.expanduser(config_path)
     
-    # Force reload from file if requested or if path not in cache
-    force_reload = os.environ.get("CODEFORGEAI_RELOAD_CONFIG", "0") == "1"
-    
-    # Always reload from file to ensure we have the most current values
     if not os.path.exists(expanded_path):
-        config = create_default_config(expanded_path)
-    else:
+        return create_default_config(expanded_path)
+    
+    try:
         with open(expanded_path) as f:
-            config = json.load(f)
-    
-    # Reset the env var
-    if force_reload:
-        os.environ["CODEFORGEAI_RELOAD_CONFIG"] = "0"
-    
-    # Update the cache
-    _config_cache[expanded_path] = config
-    
-    return config
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading config file: {e}")
+        return {}
 
 def ensure_config_prompts(config_path):
     """Ensure that all necessary prompt keys exist in the config.
     If a key is missing, append it with a default value.
     Force reload from file to ensure we have the latest values.
     """
-    # Force reload from file
-    os.environ["CODEFORGEAI_RELOAD_CONFIG"] = "1"
     config = load_config(config_path)
     
-    additional_defaults = {
+    default_config = {
         "language_classification_prompt": "in one word only, what programming language is used in this project tree structure",
         "readme_summary_prompt": "in one short sentence only, generate a concise summary of this text below, and nothing else",
         "specific_file_classification": "taking the path and content of this file and classify it into either only user code file or project code file or source control file",
@@ -77,7 +64,7 @@ def ensure_config_prompts(config_path):
     }
     
     updated = False
-    for key, value in additional_defaults.items():
+    for key, value in default_config.items():
         if key not in config:
             config[key] = value
             updated = True

@@ -5,11 +5,15 @@ import os
 class CodeModel:
     def __init__(self, model_name="ollama_code"):
         self.model_name = model_name
-        self._last_config_check = 0
 
     def send_request(self, prompt):
-        # Check if we need to reload the configuration
+        # Load config to get the latest model name
         config_path = os.path.expanduser("~/.codeforgeai.json")
+        config = load_config(config_path)
+        
+        # If config is provided, use the model name from the config
+        if config and config.get("code_model"):
+            self.model_name = config["code_model"]
         
         logging.debug(f"CodeModel: Using model: {self.model_name}")
         logging.debug("CodeModel: Sending prompt: %s", prompt)

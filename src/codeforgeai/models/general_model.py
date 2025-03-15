@@ -5,13 +5,12 @@ import os
 class GeneralModel:
     def __init__(self, model_name="ollama_general"):
         self.model_name = model_name
-        self._last_config_check = 0
 
     def send_request(self, prompt, config=None):
-        # If config is provided, check if we need to use a different model
-        if config and "general_model" in config:
-            self.model_name = config.get("general_model")
-            
+        # If config is provided, use the model name from the config
+        if config and config.get("general_model"):
+            self.model_name = config["general_model"]
+        
         logging.debug(f"GeneralModel: Using model: {self.model_name}")
         logging.debug("GeneralModel: Sending prompt: %s", prompt)
         

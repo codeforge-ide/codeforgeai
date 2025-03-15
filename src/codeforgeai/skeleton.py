@@ -42,10 +42,15 @@ _logger = logging.getLogger(__name__)
 # Define a function to get models based on current config
 def get_models():
     config_path = os.path.expanduser("~/.codeforgeai.json")
-    config = load_config(config_path)
-    general_model = GeneralModel(config.get("general_model"))
-    code_model = CodeModel(config.get("code_model"))
-    return general_model, code_model, config
+    try:
+        config = load_config(config_path)
+        general_model = GeneralModel(config.get("general_model", "ollama_general"))  # Provide default
+        code_model = CodeModel(config.get("code_model", "ollama_code"))  # Provide default
+        return general_model, code_model, config
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        # Return default models in case of error
+        return GeneralModel(), CodeModel(), {}
 
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
@@ -103,6 +108,8 @@ def execute_changes(changes):
     print(changes)
     # Placeholder: process JSON output and update files accordingly
 
+
+# process prompting
 def process_prompt(user_prompt):
     # Get fresh config each time the function is called
     _, _, config = get_models()
@@ -315,14 +322,13 @@ def main(args):
     if args.command == "config":
         from codeforgeai.config import ensure_config_prompts
         # Ensure we're loading directly from the file, not from any cached values
-        os.environ["CODEFORGEAI_RELOAD_CONFIG"] = "1"
         config = ensure_config_prompts(config_path)
         print("Configuration checkup complete. Current configuration:")
         print(json.dumps(config, indent=4))
         return
     
     # Get fresh config for all operations - don't use cached values
-    _, _, config = get_models()
+    general_model, code_model, config = get_models()
 
     if args.command == "config":
         from codeforgeai.config import ensure_config_prompts

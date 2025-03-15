@@ -19,11 +19,19 @@ class Engine:
         
     def _refresh_config(self):
         """Reload config from file to ensure we have the latest values"""
-        self.config = load_config(self.config_path)
-        # Reinitialize models with fresh config values
-        self.general_model = GeneralModel(self.config.get("general_model"))
-        self.code_model = CodeModel(self.config.get("code_model"))
-        return self.config
+        try:
+            self.config = load_config(self.config_path)
+            # Reinitialize models with fresh config values
+            self.general_model = GeneralModel(self.config.get("general_model", "ollama_general"))  # Provide default
+            self.code_model = CodeModel(self.config.get("code_model", "ollama_code"))  # Provide default
+            return self.config
+        except Exception as e:
+            print(f"Error refreshing config: {e}")
+            # Initialize with default models in case of error
+            self.config = {}
+            self.general_model = GeneralModel()
+            self.code_model = CodeModel()
+            return {}
 
     def run_analysis(self):
         self._refresh_config()  # Refresh config before operation
