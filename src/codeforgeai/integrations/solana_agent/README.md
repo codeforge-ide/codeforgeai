@@ -1,15 +1,10 @@
 # Solana Agent MCP Integration for CodeForgeAI
 
-This integration provides a lightweight client for interacting with Solana blockchain and Message Compute Programs (MCPs) from within CodeForgeAI.
+This integration provides a lightweight client for interacting with Solana blockchain and Model Context Protocols (MCPs) from within CodeForgeAI.
 
 ## What is MCP?
 
-**Message Compute Program (MCP)** is a revolutionary paradigm for blockchain development on Solana. Unlike traditional smart contracts:
-
-- **Message-Oriented**: MCPs focus on processing messages rather than managing state directly
-- **Modular Architecture**: Encourages better separation of concerns and more maintainable code
-- **Reduced Attack Surface**: By separating logic from state, security risks are minimized
-- **Improved Performance**: More efficient execution model with optimized processing
+**Model Context Protocol (MCP)** is a revolutionary paradigm for blockchain development on Solana. Unlike traditional smart contracts:
 
 MCPs represent the next evolution in blockchain programming, making Solana development more accessible and robust.
 
@@ -18,7 +13,7 @@ MCPs represent the next evolution in blockchain programming, making Solana devel
 - Check Solana Agent status and configuration
 - Get wallet balances
 - Send SOL transactions
-- Interact with MCPs (Message Compute Programs)
+- Interact with MCPs (MOdel Context Protocols)
 - Read MCP state
 - Create new MCP accounts
 

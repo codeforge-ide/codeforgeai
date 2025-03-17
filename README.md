@@ -274,16 +274,7 @@ codeforgeai web3 install-deps --full
 
 ## 🚀 Solana MCP Integration
 
-CodeforgeAI now supports the revolutionary **Message Compute Program (MCP)** paradigm for Solana blockchain development! MCPs represent the next evolution in blockchain programming.
-
-### What are Message Compute Programs (MCPs)?
-
-Message Compute Programs transform how we build on Solana by focusing on:
-
-- **Message-Oriented Architecture**: Instead of directly managing state, MCPs process messages, leading to cleaner and more modular code
-- **Improved Security Model**: By separating logic from state, MCPs significantly reduce the attack surface
-- **Enhanced Performance**: More efficient execution model that optimizes for Solana's parallel processing capabilities
-- **Developer Experience**: Simpler programming model that makes Solana development more accessible
+CodeforgeAI now supports the revolutionary **Model Context Protocol (MCP)** paradigm for Solana blockchain development! MCPs represent the next evolution in blockchain programming.
 
 ### MCP Commands
 
