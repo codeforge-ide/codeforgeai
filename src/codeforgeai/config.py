@@ -4,6 +4,7 @@ import json
 _config_cache = {}
 
 def create_default_config(config_path):
+    
     default_config = {
         "general_model": "gemma3:1b",
         "general_prompt": "based on the below prompt and without returning anything else, restructure it so that it is strictly understandable to a coding ai agent with json output for file changes:",
