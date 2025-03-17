@@ -283,6 +283,39 @@ def parse_args(args):
     zerepy_chat_parser = zerepy_subparsers.add_parser("chat", help="Chat with a ZerePy agent")
     zerepy_chat_parser.add_argument("message", nargs="+", help="Chat message")
 
+    # NEW: Solana MCP subcommands
+    solana_parser = subparsers.add_parser("solana", help="Solana blockchain commands")
+    solana_subparsers = solana_parser.add_subparsers(dest="solana_command", help="Solana commands")
+    
+    # Solana subcommands
+    solana_subparsers.add_parser("status", help="Check Solana Agent status")
+    
+    balance_parser = solana_subparsers.add_parser("balance", help="Get wallet balance")
+    balance_parser.add_argument("--address", help="Optional wallet address (uses agent wallet if not specified)")
+    
+    transfer_parser = solana_subparsers.add_parser("transfer", help="Transfer SOL to an address")
+    transfer_parser.add_argument("destination", help="Destination wallet address")
+    transfer_parser.add_argument("amount", type=float, help="Amount of SOL to transfer")
+    transfer_parser.add_argument("--memo", help="Optional memo for the transaction")
+    
+    # MCP specific commands
+    mcp_parser = solana_subparsers.add_parser("mcp", help="Solana MCP commands")
+    mcp_subparsers = mcp_parser.add_subparsers(dest="mcp_command", help="MCP commands")
+    
+    interact_parser = mcp_subparsers.add_parser("interact", help="Interact with an MCP")
+    interact_parser.add_argument("program_id", help="Program ID of the MCP")
+    interact_parser.add_argument("action_type", help="Type of action to perform")
+    interact_parser.add_argument("--params", help="Parameters as JSON string")
+    
+    state_parser = mcp_subparsers.add_parser("state", help="Get state from an MCP")
+    state_parser.add_argument("program_id", help="Program ID of the MCP")
+    state_parser.add_argument("account_address", help="Account address to read from")
+    
+    init_account_parser = mcp_subparsers.add_parser("init-account", help="Initialize a new MCP account")
+    init_account_parser.add_argument("program_id", help="Program ID of the MCP")
+    init_account_parser.add_argument("space", type=int, help="Space to allocate for the account (bytes)")
+    init_account_parser.add_argument("--params", help="Optional parameters as JSON string")
+
     parser.add_argument(
         "-v", "--verbose",
         dest="loglevel", help="set loglevel to INFO",
@@ -556,6 +589,9 @@ def main(args):
     elif args.command == "zerepy":
         handle_zerepy_commands(args)
         return
+    # NEW: Handle Solana commands
+    elif args.command == "solana":
+        handle_solana_commands(args)
     else:
         print("No valid command provided. Use 'analyze', 'prompt', 'strip', 'config', 'explain', or 'edit'.")
 
@@ -727,6 +763,101 @@ def handle_zerepy_commands(args):
     
     else:
         print("Invalid ZerePy command. Use 'codeforgeai zerepy --help' to see available commands.")
+
+# Add handler function for Solana commands
+def handle_solana_commands(args):
+    """Handle Solana blockchain commands"""
+    
+    # Import inside function to avoid circular imports
+    try:
+        from codeforgeai.integrations.solana_agent import (
+            check_solana_agent_setup,
+            get_wallet_balance,
+            send_transaction,
+            interact_with_mcp,
+            get_mcp_state,
+            init_mcp_account
+        )
+    except ImportError:
+        print("Error: Solana Agent integration not available. Install required packages.")
+        return
+    
+    if args.solana_command == "status":
+        status = check_solana_agent_setup()
+        if status["available"]:
+            print("✅ Solana Agent is running")
+            if "status" in status:
+                print(f"Network: {status['status'].get('network', 'unknown')}")
+                print(f"Agent address: {status['status'].get('address', 'unknown')}")
+        else:
+            print("❌ Solana Agent is not available")
+            print("\nEnvironment variables:")
+            for var, exists in status.get("env_vars", {}).items():
+                symbol = "✓" if exists else "✗"
+                print(f"  {symbol} {var}")
+            print("\nMake sure the Solana Agent is running on http://localhost:3000")
+            print("To install the agent, follow the instructions in the documentation.")
+    
+    elif args.solana_command == "balance":
+        result = get_wallet_balance(args.address)
+        if "error" in result:
+            print(f"Error: {result['error']}")
+        else:
+            print(f"Address: {result.get('address', 'unknown')}")
+            print(f"Balance: {result.get('balance', 0)} SOL")
+    
+    elif args.solana_command == "transfer":
+        result = send_transaction(args.destination, args.amount, args.memo)
+        if "error" in result:
+            print(f"Error: {result['error']}")
+        else:
+            print(f"Transaction successful!")
+            print(f"Transaction ID: {result.get('signature', 'unknown')}")
+            print(f"From: {result.get('sender', 'unknown')}")
+            print(f"To: {result.get('destination', 'unknown')}")
+            print(f"Amount: {args.amount} SOL")
+    
+    elif args.solana_command == "mcp":
+        if args.mcp_command == "interact":
+            try:
+                params = json.loads(args.params) if args.params else {}
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON for parameters")
+                return
+                
+            result = interact_with_mcp(args.program_id, args.action_type, params)
+            if "error" in result:
+                print(f"Error: {result['error']}")
+            else:
+                print(f"MCP interaction successful!")
+                print(json.dumps(result, indent=2))
+        
+        elif args.mcp_command == "state":
+            result = get_mcp_state(args.program_id, args.account_address)
+            if "error" in result:
+                print(f"Error: {result['error']}")
+            else:
+                print(f"MCP State:")
+                print(json.dumps(result.get("state", {}), indent=2))
+        
+        elif args.mcp_command == "init-account":
+            try:
+                params = json.loads(args.params) if args.params else None
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON for parameters")
+                return
+                
+            result = init_mcp_account(args.program_id, args.space, params)
+            if "error" in result:
+                print(f"Error: {result['error']}")
+            else:
+                print(f"MCP account initialized successfully!")
+                print(f"Account address: {result.get('address', 'unknown')}")
+                print(f"Program ID: {args.program_id}")
+        else:
+            print("Invalid MCP command. Use --help to see available commands.")
+    else:
+        print("Invalid Solana command. Use --help to see available commands.")
 
 def run():
     """Calls :func:`main` passing the CLI arguments extracted from :obj:`sys.argv`
