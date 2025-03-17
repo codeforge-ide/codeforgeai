@@ -30,9 +30,8 @@ CodeforgeAI is a powerful command-line tool that leverages AI to assist develope
 - Git
 - Ollama (for local AI models)
 
-
-
-### Step-by-Step Installation of package
+### Step-by-Step Installation of package codeforgeai
+To install CodeforgeAI, follow these steps:
 
 1. **Clone the repository:**
 
