@@ -16,6 +16,7 @@ CodeforgeAI is a powerful command-line tool that leverages AI to assist develope
 - [Core Features](#-core-features)
 - [AI Models & Integration](#-ai-models--integration)
 - [Web3 Development Tools](#-web3-development-tools)
+- [Solana MCP Integration](#-solana-mcp-integration)
 - [Vyper Smart Contract Development](#-vyper-smart-contract-development)
 - [Advanced Usage](#-advanced-usage)
 - [Contributing](#-contributing)
@@ -270,6 +271,76 @@ codeforgeai web3 install-deps
 # Full development environment
 codeforgeai web3 install-deps --full
 ```
+
+## 🚀 Solana MCP Integration
+
+CodeforgeAI now supports the revolutionary **Message Compute Program (MCP)** paradigm for Solana blockchain development! MCPs represent the next evolution in blockchain programming.
+
+### What are Message Compute Programs (MCPs)?
+
+Message Compute Programs transform how we build on Solana by focusing on:
+
+- **Message-Oriented Architecture**: Instead of directly managing state, MCPs process messages, leading to cleaner and more modular code
+- **Improved Security Model**: By separating logic from state, MCPs significantly reduce the attack surface
+- **Enhanced Performance**: More efficient execution model that optimizes for Solana's parallel processing capabilities
+- **Developer Experience**: Simpler programming model that makes Solana development more accessible
+
+### MCP Commands
+
+Interact with Solana MCPs directly from the command line:
+
+```bash
+# Check Solana Agent status and configuration
+codeforgeai solana status
+
+# Check wallet balance
+codeforgeai solana balance
+codeforgeai solana balance --address <WALLET_ADDRESS>
+
+# Send SOL transaction
+codeforgeai solana transfer <DESTINATION_ADDRESS> <AMOUNT> --memo "Optional memo"
+
+# Interact with an MCP
+codeforgeai solana mcp interact <PROGRAM_ID> <ACTION_TYPE> --params '{"key": "value"}'
+
+# Get MCP state
+codeforgeai solana mcp state <PROGRAM_ID> <ACCOUNT_ADDRESS>
+
+# Initialize MCP account
+codeforgeai solana mcp init-account <PROGRAM_ID> <SPACE> --params '{"owner": true}'
+```
+
+### Python API for MCPs
+
+Build MCP-powered applications using our Python API:
+
+```python
+from codeforgeai.integrations.solana_agent import SolanaAgentClient
+
+# Initialize client
+client = SolanaAgentClient()
+
+# Check balance
+balance = client.get_balance()
+print(f"SOL Balance: {balance.get('balance')}")
+
+# Interact with MCP
+response = client.execute_mcp_action(
+    program_id="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    action_type="transfer",
+    params={"destination": "8ZUczU...", "amount": 1000}
+)
+
+# Read MCP state
+state = client.read_mcp_state(
+    program_id="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    account_address="8ZUczUAUZbMbRFL4JgKMS9sHxwZXBAZGG3WQ4MaQULKZ"
+)
+
+print(f"Token Balance: {state.get('state', {}).get('balance')}")
+```
+
+For more information, see the [Solana Agent MCP integration docs](src/codeforgeai/integrations/solana_agent/README.md).
 
 ## 🐍 Vyper Smart Contract Development
 
