@@ -32,7 +32,7 @@ CodeforgeAI is a powerful command-line tool that leverages AI to assist develope
 
 
 
-### Step-by-Step Installation
+### Step-by-Step Installation of package
 
 1. **Clone the repository:**
 
