@@ -78,7 +78,7 @@ class Engine:
     def generate_commit_message(self, commit_msg):
         """
         Generate a commit message by prepending an emoji based on message content.
-        Uses word matching against gitmoji descriptions to find the best emoji.
+        Uses random selection of emojis from gitmoji list.
         """
         try:
             with open(os.path.expanduser("~/.gitmoji/gitmojis.json"), "r", encoding="utf-8") as f:
@@ -87,6 +87,8 @@ class Engine:
             logging.error(f"Error loading gitmojis.json: {e}")
             return commit_msg
 
+        # The original "intelligent" emoji selection logic is commented out below
+        """
         # Extract words from commit message
         msg_words = set(re.findall(r'\w+', commit_msg.lower()))
         
@@ -114,6 +116,10 @@ class Engine:
             emoji = random.choice(gitmojis).get("emoji", "")
         else:
             emoji = ""
+        """
+
+        # New logic: Simply pick a random emoji from the list
+        emoji = random.choice(gitmojis).get("emoji", "") if gitmojis else ""
 
         return f"{emoji} {commit_msg}"
 
