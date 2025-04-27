@@ -6,7 +6,7 @@
 
 ## 🚀 Overview
 
-CodeforgeAI is a powerful command-line tool that leverages AI to assist developers in their workflow. With a variety of commands and integration capabilities, it helps you analyze, generate, and improve code efficiently.
+CodeforgeAI is a powerful command-line developer tool that leverages AI to assist developers in their workflow. With a variety of commands and integration capabilities, it helps you analyze, generate, and improve code efficiently.
 
 ## 📋 Table of Contents
 
