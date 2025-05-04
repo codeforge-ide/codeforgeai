@@ -2,79 +2,35 @@ import sys
 import logging
 import os
 from codeforgeai.engine import Engine
-from codeforgeai.parser import parse_cli
+from codeforgeai.parser import parse_cli  # Use the parser from parser.py
 from codeforgeai.config import ensure_config_prompts
 import json
-import argparse  # <-- Ensure argparse is imported if not already
 
 def setup_logging(loglevel):
-    import sys
     logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
     logging.basicConfig(level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
 
-def parse_cli(args):
-    parser = argparse.ArgumentParser(description="CodeforgeAI AI agent")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
-    analyze_parser = subparsers.add_parser("analyze", help="Analyze current working directory")
-    analyze_parser.add_argument("--loop", action="store_true", help="Enable adaptive feedback loop")
-    
-    prompt_parser = subparsers.add_parser("prompt", help="Process a user prompt")
-    prompt_parser.add_argument("user_prompt", nargs="+", help="User input prompt")
-    
-    subparsers.add_parser("config", help="Run configuration checkup")
-    subparsers.add_parser("strip", help="Print tree structure after removing gitignored files")
-    subparsers.add_parser("commit-message", help="Generate commit message with gitmoji")
-    
-    # Add Vyper subcommand
-    vyper_parser = subparsers.add_parser("vyper", help="Work with Vyper smart contracts")
-    vyper_subparsers = vyper_parser.add_subparsers(dest="vyper_command", help="Available Vyper commands")
-    
-    # Compile command
-    compile_parser = vyper_subparsers.add_parser("compile", help="Compile a Vyper smart contract")
-    compile_parser.add_argument("file_path", help="Path to the Vyper contract file")
-    compile_parser.add_argument("-f", "--format", choices=["abi", "bytecode", "bytecode_runtime", "ir", "asm", "source_map", "method_identifiers"], 
-                               default="abi", help="Output format (default: abi)")
-    compile_parser.add_argument("--optimize", choices=["none", "gas", "codesize"], 
-                               help="Optimization mode: none, gas, or codesize")
-    compile_parser.add_argument("--evm-version", help="Target EVM version")
-    
-    # Analyze command
-    analyze_parser = vyper_subparsers.add_parser("analyze", help="Analyze a Vyper smart contract")
-    analyze_parser.add_argument("file_path", help="Path to the Vyper contract file")
-    
-    # Check command
-    vyper_subparsers.add_parser("check", help="Check if Vyper is installed")
-    
-    parser.add_argument("-v", "--verbose", dest="loglevel", help="set loglevel to INFO",
-                        action="store_const", const=logging.INFO)
-    parser.add_argument("-vv", "--very-verbose", dest="loglevel", help="set loglevel to DEBUG",
-                        action="store_const", const=logging.DEBUG)
-    parser.add_argument("--debug", action="store_true", default=False,
-                        help="Enable debug mode (overrides other verbosity flags)")
-    return parser.parse_args(args)
-
 def main():
     config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
-    args = parse_cli(sys.argv[1:])
-    if args.debug:
+    args = parse_cli(sys.argv[1:])  # Use the parser from parser.py
+    if hasattr(args, 'debug') and args.debug:
         loglevel = logging.DEBUG
     else:
-        loglevel = args.loglevel if args.loglevel is not None else logging.WARNING
+        loglevel = getattr(args, 'loglevel', None) if hasattr(args, 'loglevel') and args.loglevel is not None else logging.WARNING
     setup_logging(loglevel)
-    
-    if args.command == "config":
+
+    if getattr(args, 'command', None) == "config":
         config = ensure_config_prompts(config_path)
         print("Configuration checkup complete. Current configuration:")
         print(json.dumps(config, indent=4))
         return
-    
-    if args.command == "strip":
+
+    if getattr(args, 'command', None) == "strip":
         from codeforgeai.directory import strip_directory
         strip_directory()
         return
-    
-    if args.command == "github":
+
+    if getattr(args, 'command', None) == "github":
         if getattr(args, "github_command", None) == "copilot":
             from codeforgeai.integrations.github_copilot import copilot as copilot_lsp
             copilot_cmd = getattr(args, "copilot_command", None)
