@@ -12,6 +12,8 @@ def setup_logging(loglevel):
 
 def main():
     config_path = os.path.join(os.path.expanduser("~"), ".codeforgeai.json")
+    # Use parse_cli from parser.py for all CLI parsing
+    from codeforgeai.parser import parse_cli
     args = parse_cli(sys.argv[1:])  # Use the parser from parser.py
     if hasattr(args, 'debug') and args.debug:
         loglevel = logging.DEBUG
