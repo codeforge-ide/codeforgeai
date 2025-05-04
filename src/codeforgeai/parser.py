@@ -14,6 +14,15 @@ def parse_cli(args):
     copilot_subparsers.add_parser("logout", help="Logout from GitHub Copilot")
     copilot_subparsers.add_parser("status", help="Check GitHub Copilot status")
     copilot_subparsers.add_parser("lsp", help="install copilot language server globally")
+    # Add inline-completion and panel-completion with arguments
+    inline_parser = copilot_subparsers.add_parser("inline-completion", help="Get inline code completion at a specific position")
+    inline_parser.add_argument("--file", required=True, help="Path to the file")
+    inline_parser.add_argument("--line", type=int, required=True, help="Line number (0-based)")
+    inline_parser.add_argument("--character", type=int, required=True, help="Character position (0-based)")
+    panel_parser = copilot_subparsers.add_parser("panel-completion", help="Get panel (multi-line) code completion at a specific position")
+    panel_parser.add_argument("--file", required=True, help="Path to the file")
+    panel_parser.add_argument("--line", type=int, required=True, help="Line number (0-based)")
+    panel_parser.add_argument("--character", type=int, required=True, help="Character position (0-based)")
 
     # Subcommand: analyze working directory
     analyze_parser = subparsers.add_parser("analyze", help="Analyze current working directory")

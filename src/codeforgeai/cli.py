@@ -87,16 +87,9 @@ def main():
             elif copilot_cmd == "status":
                 copilot_lsp.copilot_status()
             elif copilot_cmd == "inline-completion":
-                # Expecting: --file, --line, --character
-                if hasattr(args, "file") and hasattr(args, "line") and hasattr(args, "character"):
-                    copilot_lsp.copilot_lsp_inline_completion(args.file, args.line, args.character)
-                else:
-                    print("Usage: codeforgeai github copilot inline-completion --file <file> --line <line> --character <character>")
+                copilot_lsp.copilot_lsp_inline_completion(args.file, args.line, args.character)
             elif copilot_cmd == "panel-completion":
-                if hasattr(args, "file") and hasattr(args, "line") and hasattr(args, "character"):
-                    copilot_lsp.copilot_lsp_panel_completion(args.file, args.line, args.character)
-                else:
-                    print("Usage: codeforgeai github copilot panel-completion --file <file> --line <line> --character <character>")
+                copilot_lsp.copilot_lsp_panel_completion(args.file, args.line, args.character)
             else:
                 print("Invalid copilot subcommand. Use --help to see available commands.")
             return

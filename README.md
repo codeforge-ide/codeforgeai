@@ -480,3 +480,61 @@ client.perform_action(
 ```
 
 For more details, see the [ZerePy integration documentation](src/codeforgeai/integrations/zerepy/README.md).
+
+## 🤖 GitHub Copilot Integration
+
+CodeforgeAI now features robust, modular integration with GitHub Copilot via the Copilot Language Server Protocol (LSP). This enables advanced AI code completion, suggestions, and authentication directly from the CLI or any GUI/IDE that wraps the CLI.
+
+### Copilot Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `github copilot lsp` | Install the Copilot language server globally (requires pnpm, yarn, or npm) |
+| `github copilot login` | Authenticate with GitHub Copilot (opens browser for OAuth) |
+| `github copilot logout` | Logout from GitHub Copilot |
+| `github copilot status` | Check Copilot authentication and connection status |
+| `github copilot inline-completion --file <file> --line <line> --character <character>` | Get inline code completion at a specific position |
+| `github copilot panel-completion --file <file> --line <line> --character <character>` | Get panel (multi-line) code completion at a specific position |
+
+#### Usage Examples (CLI)
+
+```bash
+# Install Copilot language server globally
+codeforgeai github copilot lsp
+
+# Authenticate with Copilot (follow browser instructions)
+codeforgeai github copilot login
+
+# Logout from Copilot
+codeforgeai github copilot logout
+
+# Check Copilot status
+codeforgeai github copilot status
+
+# Get inline completion for a file at line 10, character 5
+codeforgeai github copilot inline-completion --file app.py --line 10 --character 5
+
+# Get panel completion for a file at line 20, character 0
+codeforgeai github copilot panel-completion --file main.py --line 20 --character 0
+```
+
+#### Usage in IDEs/GUI
+
+- Any IDE or GUI that can call these CLI subcommands can leverage Copilot's AI completions and authentication.
+- For Flutter or Electron-based GUIs, simply invoke the relevant subcommand and parse the output for completions or status.
+- The Copilot LSP client is modular and can be imported in Python for direct integration in custom tools.
+
+#### Programmatic Usage (Python)
+
+```python
+from codeforgeai.integrations.github_copilot import copilot
+
+# Authenticate with Copilot
+copilot.copilot_login()
+
+# Get inline completion
+result = copilot.CopilotLSPClient().inline_completion('app.py', 10, 5)
+print(result)
+```
+
+> **Note:** The Copilot LSP integration is fully modular and can be extended for advanced IDE features, such as real-time completions, document sync, and more.
