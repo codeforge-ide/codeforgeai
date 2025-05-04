@@ -73,6 +73,25 @@ def main():
         from codeforgeai.directory import strip_directory
         strip_directory()
         return
+    
+    if args.command == "github":
+        if args.command == "copilot":
+            # from codeforgeai.integrations.github_copilot import copilot_login
+            from codeforgeai.integrations.github_copilot import copilot_lsp
+            if args.copilot_command == "lsp":
+                copilot_lsp.install_copilot_language_server()
+            elif args.copilot_command == "login":
+                copilot_lsp.copilot_login()
+            else:
+                print("Invalid copilot subcommand. Use --help to see available commands.")
+
+            # from codeforgeai.integrations.github_copilot import copilot_login
+            # copilot_login()
+            # return
+        else:
+            print("Invalid command. Use --help to see available commands.")
+            return
+    # Ensure config prompts are loaded
 
     engine = Engine()
     
