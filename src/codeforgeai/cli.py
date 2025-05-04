@@ -75,21 +75,33 @@ def main():
         return
     
     if args.command == "github":
-        if args.command == "copilot":
-            # from codeforgeai.integrations.github_copilot import copilot_login
-            from codeforgeai.integrations.github_copilot import copilot_lsp
-            if args.copilot_command == "lsp":
+        if getattr(args, "github_command", None) == "copilot":
+            from codeforgeai.integrations.github_copilot import copilot as copilot_lsp
+            copilot_cmd = getattr(args, "copilot_command", None)
+            if copilot_cmd == "lsp":
                 copilot_lsp.install_copilot_language_server()
-            elif args.copilot_command == "login":
+            elif copilot_cmd == "login":
                 copilot_lsp.copilot_login()
+            elif copilot_cmd == "logout":
+                copilot_lsp.copilot_logout()
+            elif copilot_cmd == "status":
+                copilot_lsp.copilot_status()
+            elif copilot_cmd == "inline-completion":
+                # Expecting: --file, --line, --character
+                if hasattr(args, "file") and hasattr(args, "line") and hasattr(args, "character"):
+                    copilot_lsp.copilot_lsp_inline_completion(args.file, args.line, args.character)
+                else:
+                    print("Usage: codeforgeai github copilot inline-completion --file <file> --line <line> --character <character>")
+            elif copilot_cmd == "panel-completion":
+                if hasattr(args, "file") and hasattr(args, "line") and hasattr(args, "character"):
+                    copilot_lsp.copilot_lsp_panel_completion(args.file, args.line, args.character)
+                else:
+                    print("Usage: codeforgeai github copilot panel-completion --file <file> --line <line> --character <character>")
             else:
                 print("Invalid copilot subcommand. Use --help to see available commands.")
-
-            # from codeforgeai.integrations.github_copilot import copilot_login
-            # copilot_login()
-            # return
+            return
         else:
-            print("Invalid command. Use --help to see available commands.")
+            print("Invalid github subcommand. Use --help to see available commands.")
             return
     # Ensure config prompts are loaded
 
