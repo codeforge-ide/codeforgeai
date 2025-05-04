@@ -3,7 +3,7 @@ import logging
 import os
 from codeforgeai.engine import Engine
 from codeforgeai.parser import parse_cli
-from codeforgeai.config import ensure_config_prompts, load_config
+from codeforgeai.config import ensure_config_prompts
 import json
 import argparse  # <-- Ensure argparse is imported if not already
 

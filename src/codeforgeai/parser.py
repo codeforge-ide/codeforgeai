@@ -6,7 +6,14 @@ def parse_cli(args):
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
     # Subcommand: github copilot integration
-    
+    github_parser = subparsers.add_parser("github", help="GitHub Copilot integration")
+    github_subparsers = github_parser.add_subparsers(dest="github_command", help="GitHub Copilot commands")
+    copilot_parser = github_subparsers.add_parser("copilot", help="Github copilot integration")
+    copilot_subparsers = copilot_parser.add_subparsers(dest="copilot_command", help="Copilot commands")
+    copilot_subparsers.add_parser("login", help="Authenticate with GitHub Copilot")
+    copilot_subparsers.add_parser("logout", help="Logout from GitHub Copilot")
+    copilot_subparsers.add_parser("status", help="Check GitHub Copilot status")
+    copilot_subparsers.add_parser("lsp", help="install copilot language server globally")
 
     # Subcommand: analyze working directory
     analyze_parser = subparsers.add_parser("analyze", help="Analyze current working directory")
