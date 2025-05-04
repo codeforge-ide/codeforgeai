@@ -5,6 +5,9 @@ def parse_cli(args):
     parser = argparse.ArgumentParser(description="CodeforgeAI AI agent")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
+    # Subcommand: github copilot integration
+    
+
     # Subcommand: analyze working directory
     analyze_parser = subparsers.add_parser("analyze", help="Analyze current working directory")
     analyze_parser.add_argument("--loop", action="store_true", help="Enable adaptive feedback loop")
